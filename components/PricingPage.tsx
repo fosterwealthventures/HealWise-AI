@@ -1,0 +1,123 @@
+import React from 'react';
+import { SubscriptionPlan } from '../types';
+
+const CheckIcon = () => (
+  <svg className="h-6 w-6 text-brand-green" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+  </svg>
+);
+
+const PlanCard: React.FC<{
+  planName: string;
+  price: string;
+  period: string;
+  description: string;
+  features: string[];
+  isFeatured?: boolean;
+  onSelect: () => void;
+  buttonText: string;
+}> = ({ planName, price, period, description, features, isFeatured = false, onSelect, buttonText }) => {
+  const cardClasses = isFeatured 
+    ? "bg-brand-green-dark text-white border-2 border-brand-green-dark" 
+    : "bg-white text-brand-charcoal border border-gray-200";
+  const buttonClasses = isFeatured
+    ? "bg-white text-brand-green-dark hover:bg-gray-100"
+    : "bg-brand-green-dark text-white hover:bg-brand-green-dark/90";
+
+  return (
+    <div className={`rounded-2xl p-8 shadow-card flex flex-col ${cardClasses}`}>
+      <h3 className="text-2xl font-bold">{planName}</h3>
+      <p className={`mt-2 ${isFeatured ? 'text-gray-200' : 'text-gray-500'}`}>{description}</p>
+      <div className="mt-6">
+        <span className="text-5xl font-extrabold">{price}</span>
+        <span className={`ml-2 text-lg font-medium ${isFeatured ? 'text-gray-300' : 'text-gray-500'}`}>{period}</span>
+      </div>
+      <ul className="mt-8 space-y-4 flex-grow">
+        {features.map((feature, i) => (
+          <li key={i} className="flex items-start">
+            <div className="flex-shrink-0">
+              <CheckIcon />
+            </div>
+            <p className="ml-3 text-base">{feature}</p>
+          </li>
+        ))}
+      </ul>
+      <button 
+        onClick={onSelect}
+        className={`mt-10 block w-full py-3 px-6 text-center font-semibold rounded-lg shadow-md transition-transform transform hover:scale-105 ${buttonClasses}`}
+      >
+        {buttonText}
+      </button>
+    </div>
+  );
+};
+
+
+const PricingPage: React.FC<{ onSelectPlan: (plan: SubscriptionPlan) => void }> = ({ onSelectPlan }) => {
+  const handlePaidPlanClick = (planName: string) => {
+    alert(`Stripe integration for the ${planName} plan is coming soon! This would redirect to a checkout page.`);
+  }
+
+  return (
+    <div className="animate-fade-in">
+      <div className="text-center">
+        <h1 className="text-4xl font-extrabold text-brand-charcoal sm:text-5xl">
+          Find the Perfect Plan
+        </h1>
+        <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-500">
+          Start your journey to holistic wellness today. Choose a plan that fits your needs.
+        </p>
+      </div>
+
+      <div className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <PlanCard
+          planName="Free"
+          price="$0"
+          period="/forever"
+          description="A great way to get started with HealWise."
+          features={[
+            "1 shared health condition input per day",
+            "1 medication/supplement input per day",
+            "Recommendations for Food, Herbs, and Recipes from your single condition",
+          ]}
+          onSelect={() => onSelectPlan('free')}
+          buttonText="Select Plan"
+        />
+        <PlanCard
+          planName="Pro"
+          price="$7.99"
+          period="/month"
+          description="For those who want to dive deeper into their health. Go annual for $79 and save over 15%!"
+          features={[
+            "Up to 50 analyses per month",
+            "Analyze multiple items per search",
+            "Use different conditions across modules",
+            "Save recommendations to planner",
+          ]}
+          isFeatured={true}
+          onSelect={() => handlePaidPlanClick('Pro')}
+          buttonText="Upgrade to Pro"
+        />
+        <PlanCard
+          planName="Premium"
+          price="$14.99"
+          period="/month"
+          description="For comprehensive health management. Go annual for $99 and save over 40%!"
+          features={[
+            "Everything in Pro, plus:",
+            "Up to 100 analyses per month",
+            "Personalized wellness plans (coming soon)",
+            "Early access to new features",
+          ]}
+          onSelect={() => handlePaidPlanClick('Premium')}
+          buttonText="Upgrade to Premium"
+        />
+      </div>
+       <p className="text-center mt-8 text-gray-500 text-sm">
+        Note: The Pro and Premium plans will be enabled via Stripe integration. The buttons are currently placeholders.
+      </p>
+    </div>
+  );
+};
+
+export default PricingPage;

@@ -1,0 +1,18 @@
+{
+  "short_name": "HealWise",
+  "name": "HealWise AI Dashboard",
+  "description": "An interactive, intelligent wellness dashboard that provides recommendations for whole-foods, herbs, medications, and recipes based on user-input health conditions.",
+  "icons": [
+    {
+      "src": "logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#588157",
+  "background_color": "#FEFBF6",
+  "scope": "/"
+}
