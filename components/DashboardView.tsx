@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ModuleType, SubscriptionPlan } from '../types';
+import { ModuleType, SubscriptionPlan, PlannerItem } from '../types';
 import ModuleCard from './ModuleCard';
 import VideoPlayerModal from './VideoPlayerModal';
 import { AllergyIcon, AppleIcon, LeafIcon, PillIcon, BlenderIcon } from './icons/ModuleIcons';
@@ -112,7 +112,8 @@ const DashboardView: React.FC<{
   plan: SubscriptionPlan;
   restrictions: string;
   setRestrictions: (value: string) => void;
-}> = ({ plan, restrictions, setRestrictions }) => {
+  onAddToPlanner: (item: Omit<PlannerItem, 'id' | 'savedAt'>) => void;
+}> = ({ plan, restrictions, setRestrictions, onAddToPlanner }) => {
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
   const [dailyUsage, setDailyUsage] = useState<DailyUsage>(getInitialDailyUsage);
   const [monthlyUsage, setMonthlyUsage] = useState<MonthlyUsage>(getInitialMonthlyUsage);
@@ -179,20 +180,20 @@ const DashboardView: React.FC<{
   return (
     <>
       <div className="text-center mb-10 animate-fade-in">
-        <p className="text-lg italic text-brand-green-dark">
+        <p className="text-lg italic text-brand-green-dark dark:text-brand-green-light">
           "And its fruit shall be food, and its leaf shall be for medicine"
         </p>
-        <p className="mt-2 text-sm font-medium text-gray-500">
+        <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
           — Ezekiel 47:12
         </p>
       </div>
       
-      <div className="mb-8 p-6 bg-white rounded-2xl shadow-card animate-fade-in">
-          <h3 className="text-lg font-bold text-brand-charcoal flex items-center">
+      <div className="mb-8 p-6 bg-white dark:bg-brand-charcoal-light rounded-2xl shadow-card animate-fade-in">
+          <h3 className="text-lg font-bold text-brand-charcoal dark:text-brand-cream flex items-center">
             <AllergyIcon />
             <span className="ml-3">Dietary Restrictions & Allergies</span>
           </h3>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             List any items you need to avoid. All recommendations will exclude these.
           </p>
           <input
@@ -200,7 +201,7 @@ const DashboardView: React.FC<{
             value={restrictions}
             onChange={(e) => setRestrictions(e.target.value)}
             placeholder="e.g., Allergic to peanuts, gluten-free, no shellfish"
-            className="mt-4 w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-100 focus:ring-2 focus:ring-brand-green focus:border-transparent outline-none transition"
+            className="mt-4 w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-brand-charcoal focus:ring-2 focus:ring-brand-green focus:border-transparent outline-none transition dark:placeholder-gray-500 dark:text-brand-cream"
           />
       </div>
 
@@ -213,6 +214,7 @@ const DashboardView: React.FC<{
             restrictions={restrictions}
             onPlayVideo={handlePlayVideo}
             onSubmission={handleSubmission}
+            onAddToPlanner={onAddToPlanner}
             remainingUsage={{ conditions: conditionsRemaining, meds: medsRemaining }}
             {...(plan === 'free' && module.type !== ModuleType.Meds && {
               sharedInput: freeTierCondition,

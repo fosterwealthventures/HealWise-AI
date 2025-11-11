@@ -1,4 +1,3 @@
-// Fix: Replaced incorrect file content with the correct type definitions.
 
 export type SubscriptionPlan = 'free' | 'pro' | 'premium';
 

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { ModuleType, SubscriptionPlan, ApiResult } from '../types';
+import { ModuleType, SubscriptionPlan, ApiResult, PlannerItem } from '../types';
 import { generateRecommendation } from '../services/geminiService';
 import ResultsCard from './ResultsCard';
 
@@ -23,12 +23,13 @@ interface ModuleCardProps {
   restrictions: string;
   onPlayVideo: (videoId: string) => void;
   onSubmission: (itemCount: number, moduleType: ModuleType) => void;
+  onAddToPlanner: (item: Omit<PlannerItem, 'id' | 'savedAt'>) => void;
   remainingUsage: { conditions: number; meds: number };
   sharedInput?: string;
   setSharedInput?: (value: string) => void;
 }
 
-const ModuleCard: React.FC<ModuleCardProps> = ({ module, plan, restrictions, onPlayVideo, onSubmission, remainingUsage, sharedInput, setSharedInput }) => {
+const ModuleCard: React.FC<ModuleCardProps> = ({ module, plan, restrictions, onPlayVideo, onSubmission, onAddToPlanner, remainingUsage, sharedInput, setSharedInput }) => {
   const [itemInputs, setItemInputs] = useState<string[]>(['']);
   const [recipeType, setRecipeType] = useState<'Juice' | 'Smoothie' | 'Tea'>('Juice');
   const [isLoading, setIsLoading] = useState(false);
@@ -103,26 +104,29 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ module, plan, restrictions, onP
   const selectedColor = colorClasses;
 
   return (
-    <div className="bg-white rounded-2xl shadow-card p-6 flex flex-col min-h-[400px]">
+    <div className="bg-white dark:bg-brand-charcoal-light rounded-2xl shadow-card p-6 flex flex-col min-h-[400px]">
       <div className="flex items-center">
         <div className={`p-3 rounded-full ${selectedColor.icon}`}>
             {React.cloneElement(icon, { className: 'h-6 w-6' })}
         </div>
-        <h3 className="ml-4 text-xl font-bold text-brand-charcoal">{title}</h3>
+        <h3 className="ml-4 text-xl font-bold text-brand-charcoal dark:text-brand-cream">{title}</h3>
       </div>
       
       <div className="mt-6 flex-grow flex flex-col">
         {results ? (
           <div className="animate-fade-in-up">
             <div className="flex justify-between items-center mb-4">
-              <h4 className="font-semibold text-brand-charcoal">AI Recommendations</h4>
+              <h4 className="font-semibold text-brand-charcoal dark:text-brand-cream">AI Recommendations</h4>
               <button onClick={() => setResults(null)} className="text-sm font-medium text-brand-green-dark hover:underline">New Search</button>
             </div>
             <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
               {results.map((result, index) => (
-                <ResultsCard key={index} result={result} moduleType={module.type} restrictions={restrictions} onPlayVideo={onPlayVideo} plan={plan} />
+                <ResultsCard key={index} result={result} moduleType={module.type} restrictions={restrictions} onPlayVideo={onPlayVideo} plan={plan} onAddToPlanner={onAddToPlanner} />
               ))}
             </div>
+            <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-4 italic">
+              Disclaimer: This information is for educational purposes and not a substitute for professional medical advice.
+            </p>
           </div>
         ) : (
           <>
@@ -134,11 +138,11 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ module, plan, restrictions, onP
                     value={isFreeRecommender ? sharedInput ?? '' : item}
                     onChange={(e) => handleItemInputChange(index, e.target.value)}
                     placeholder={placeholder}
-                    className={`flex-grow w-full px-4 py-3 text-base border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 ${selectedColor.focusRing} focus:border-transparent outline-none transition`}
+                    className={`flex-grow w-full px-4 py-3 text-base border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-brand-charcoal focus:ring-2 ${selectedColor.focusRing} focus:border-transparent outline-none transition dark:placeholder-gray-500 dark:text-brand-cream`}
                     disabled={isLoading || isLimitReached}
                   />
                   {plan !== 'free' && itemInputs.length > 1 && (
-                    <button onClick={() => handleRemoveItem(index)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-100 rounded-full transition-colors" disabled={isLoading}>
+                    <button onClick={() => handleRemoveItem(index)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-full transition-colors" disabled={isLoading}>
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z" clipRule="evenodd" /></svg>
                     </button>
                   )}
@@ -158,7 +162,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ module, plan, restrictions, onP
                     <button
                       key={type}
                       onClick={() => setRecipeType(type)}
-                      className={`px-4 py-2 text-sm font-semibold rounded-full transition-all duration-200 ${recipeType === type ? `${selectedColor.button} text-white shadow-md` : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
+                      className={`px-4 py-2 text-sm font-semibold rounded-full transition-all duration-200 ${recipeType === type ? `${selectedColor.button} text-white shadow-md` : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500'}`}
                       disabled={isLoading || isLimitReached}
                     >
                       {type}
@@ -173,13 +177,13 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ module, plan, restrictions, onP
 
       <div className="mt-6">
         {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg" role="alert">
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg dark:bg-red-900/50 dark:border-red-700/60 dark:text-red-300" role="alert">
                 <p><strong className="font-semibold">Error:</strong> {error}</p>
             </div>
         )}
         <button
             onClick={handleSubmit}
-            className={`w-full py-3 text-white font-bold rounded-lg shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:scale-100 ${selectedColor.button}`}
+            className={`w-full py-3 text-white font-bold rounded-lg shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:bg-gray-400 dark:disabled:bg-gray-500 disabled:cursor-not-allowed disabled:scale-100 ${selectedColor.button}`}
             disabled={isLoading || isLimitReached}
         >
           {isLoading ? (
@@ -189,7 +193,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ module, plan, restrictions, onP
             </svg>
           ) : isLimitReached ? 'Usage limit reached' : 'Get Recommendations'}
         </button>
-        <p className="text-center text-xs text-gray-400 mt-2">
+        <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-2">
             Analyses remaining this {plan === 'free' ? 'day' : 'month'}: {remaining < 0 ? 0 : remaining}
         </p>
       </div>

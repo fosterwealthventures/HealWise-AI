@@ -4,13 +4,41 @@ import Header from './components/Header';
 import DashboardView from './components/DashboardView';
 import PricingPage from './components/PricingPage';
 import OnboardingModal from './components/OnboardingModal';
-import { SubscriptionPlan } from './types';
+import PlannerView from './components/PlannerView';
+import AppFooter from './components/AppFooter';
+import { SubscriptionPlan, PlannerItem } from './types';
 
 const App: React.FC = () => {
   const [activeView, setActiveView] = useState('dashboard');
   const [plan, setPlan] = useState<SubscriptionPlan>('free');
   const [restrictions, setRestrictions] = useState(() => localStorage.getItem('healwiseRestrictions') || '');
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [plannerItems, setPlannerItems] = useState<PlannerItem[]>(() => {
+    try {
+      const savedItems = localStorage.getItem('healwisePlannerItems');
+      return savedItems ? JSON.parse(savedItems) : [];
+    } catch (error) {
+      console.error("Failed to parse planner items from localStorage", error);
+      return [];
+    }
+  });
+
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedMode = localStorage.getItem('healwise-dark-mode');
+    if (savedMode) {
+      return JSON.parse(savedMode);
+    }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('healwise-dark-mode', JSON.stringify(isDarkMode));
+  }, [isDarkMode]);
 
   useEffect(() => {
     const onboardingComplete = localStorage.getItem('healwiseOnboardingComplete');
@@ -23,6 +51,10 @@ const App: React.FC = () => {
     localStorage.setItem('healwiseRestrictions', restrictions);
   }, [restrictions]);
 
+  useEffect(() => {
+    localStorage.setItem('healwisePlannerItems', JSON.stringify(plannerItems));
+  }, [plannerItems]);
+
   const handleOnboardingComplete = () => {
     setShowOnboarding(false);
     localStorage.setItem('healwiseOnboardingComplete', 'true');
@@ -34,29 +66,41 @@ const App: React.FC = () => {
     setActiveView('dashboard');
   };
 
+  const handleAddToPlanner = (itemToAdd: Omit<PlannerItem, 'id' | 'savedAt'>) => {
+    const newItem: PlannerItem = {
+      ...itemToAdd,
+      id: `${itemToAdd.moduleType}-${new Date().getTime()}`,
+      savedAt: new Date().toISOString(),
+    };
+    setPlannerItems(prevItems => [...prevItems, newItem]);
+  };
+  
+  const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
+
   const renderView = () => {
     switch(activeView) {
       case 'dashboard':
-        return <DashboardView plan={plan} restrictions={restrictions} setRestrictions={setRestrictions} />;
+        return <DashboardView plan={plan} restrictions={restrictions} setRestrictions={setRestrictions} onAddToPlanner={handleAddToPlanner} />;
       case 'pricing':
         return <PricingPage onSelectPlan={handlePlanSelect} />;
       case 'planner':
-        return <div className="text-center p-10">Planner View - Coming Soon!</div>;
+        return <PlannerView items={plannerItems} setItems={setPlannerItems} />;
       case 'shop':
-        return <div className="text-center p-10">Shop View - Coming Soon!</div>;
+        return <div className="text-center p-10 dark:text-brand-cream">Shop View - Coming Soon!</div>;
       default:
-        return <DashboardView plan={plan} restrictions={restrictions} setRestrictions={setRestrictions} />;
+        return <DashboardView plan={plan} restrictions={restrictions} setRestrictions={setRestrictions} onAddToPlanner={handleAddToPlanner} />;
     }
   }
 
   return (
-    <div className="flex h-screen bg-brand-cream font-sans text-brand-charcoal">
-      <Sidebar activeView={activeView} setActiveView={setActiveView} />
+    <div className="flex h-screen bg-brand-cream font-sans text-brand-charcoal dark:bg-brand-charcoal dark:text-brand-cream">
+      <Sidebar activeView={activeView} setActiveView={setActiveView} plannerItemCount={plannerItems.length} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header currentPlan={plan} setPlan={setPlan} />
+        <Header currentPlan={plan} setPlan={setPlan} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-6 lg:p-10">
           {renderView()}
         </main>
+        <AppFooter />
       </div>
       {showOnboarding && (
         <OnboardingModal 

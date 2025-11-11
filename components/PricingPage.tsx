@@ -19,7 +19,7 @@ const PlanCard: React.FC<{
 }> = ({ planName, price, period, description, features, isFeatured = false, onSelect, buttonText }) => {
   const cardClasses = isFeatured 
     ? "bg-brand-green-dark text-white border-2 border-brand-green-dark" 
-    : "bg-white text-brand-charcoal border border-gray-200";
+    : "bg-white dark:bg-brand-charcoal-light text-brand-charcoal dark:text-brand-cream border border-gray-200 dark:border-gray-700";
   const buttonClasses = isFeatured
     ? "bg-white text-brand-green-dark hover:bg-gray-100"
     : "bg-brand-green-dark text-white hover:bg-brand-green-dark/90";
@@ -27,10 +27,10 @@ const PlanCard: React.FC<{
   return (
     <div className={`rounded-2xl p-8 shadow-card flex flex-col ${cardClasses}`}>
       <h3 className="text-2xl font-bold">{planName}</h3>
-      <p className={`mt-2 ${isFeatured ? 'text-gray-200' : 'text-gray-500'}`}>{description}</p>
+      <p className={`mt-2 ${isFeatured ? 'text-gray-200' : 'text-gray-500 dark:text-gray-400'}`}>{description}</p>
       <div className="mt-6">
         <span className="text-5xl font-extrabold">{price}</span>
-        <span className={`ml-2 text-lg font-medium ${isFeatured ? 'text-gray-300' : 'text-gray-500'}`}>{period}</span>
+        <span className={`ml-2 text-lg font-medium ${isFeatured ? 'text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>{period}</span>
       </div>
       <ul className="mt-8 space-y-4 flex-grow">
         {features.map((feature, i) => (
@@ -61,10 +61,10 @@ const PricingPage: React.FC<{ onSelectPlan: (plan: SubscriptionPlan) => void }> 
   return (
     <div className="animate-fade-in">
       <div className="text-center">
-        <h1 className="text-4xl font-extrabold text-brand-charcoal sm:text-5xl">
+        <h1 className="text-4xl font-extrabold text-brand-charcoal dark:text-brand-cream sm:text-5xl">
           Find the Perfect Plan
         </h1>
-        <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-500">
+        <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-500 dark:text-gray-400">
           Start your journey to holistic wellness today. Choose a plan that fits your needs.
         </p>
       </div>
@@ -113,7 +113,7 @@ const PricingPage: React.FC<{ onSelectPlan: (plan: SubscriptionPlan) => void }> 
           buttonText="Upgrade to Premium"
         />
       </div>
-       <p className="text-center mt-8 text-gray-500 text-sm">
+       <p className="text-center mt-8 text-gray-500 dark:text-gray-400 text-sm">
         Note: The Pro and Premium plans will be enabled via Stripe integration. The buttons are currently placeholders.
       </p>
     </div>
