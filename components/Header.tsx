@@ -13,6 +13,12 @@ const MoonIcon = () => (
     </svg>
 );
 
+const HamburgerIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+);
+
 
 const DarkModeToggle: React.FC<{ isDarkMode: boolean; toggleDarkMode: () => void; }> = ({ isDarkMode, toggleDarkMode }) => (
     <button
@@ -25,12 +31,28 @@ const DarkModeToggle: React.FC<{ isDarkMode: boolean; toggleDarkMode: () => void
 );
 
 
-const Header: React.FC<{ currentPlan: SubscriptionPlan; setPlan: (plan: SubscriptionPlan) => void; isDarkMode: boolean; toggleDarkMode: () => void; setActiveView: (view: string) => void; }> = ({ currentPlan, setPlan, isDarkMode, toggleDarkMode, setActiveView }) => {
+const Header: React.FC<{ 
+    currentPlan: SubscriptionPlan; 
+    setPlan: (plan: SubscriptionPlan) => void; 
+    isDarkMode: boolean; 
+    toggleDarkMode: () => void; 
+    setActiveView: (view: string) => void;
+    toggleMobileSidebar: () => void; 
+}> = ({ currentPlan, setPlan, isDarkMode, toggleDarkMode, setActiveView, toggleMobileSidebar }) => {
   return (
-    <header className="h-24 bg-brand-cream/80 backdrop-blur-sm dark:bg-brand-charcoal/80 flex-shrink-0 flex items-center justify-between px-6 lg:px-10 border-b border-gray-200/80 dark:border-gray-700/60">
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-brand-charcoal dark:text-brand-cream">Your Path to Wellness</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Discover personalized, food-first recommendations.</p>
+    <header className="h-24 bg-brand-cream/80 backdrop-blur-sm dark:bg-brand-charcoal/80 flex-shrink-0 flex items-center justify-between px-4 lg:px-10 border-b border-gray-200/80 dark:border-gray-700/60">
+      <div className="flex items-center gap-4">
+        <button
+            onClick={toggleMobileSidebar}
+            className="lg:hidden p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200/60 dark:hover:bg-brand-charcoal-light/60 transition-colors"
+            aria-label="Open navigation menu"
+        >
+            <HamburgerIcon />
+        </button>
+        <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-brand-charcoal dark:text-brand-cream">Your Path to Wellness</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 hidden sm:block">Discover personalized, food-first recommendations.</p>
+        </div>
       </div>
       <div className="flex items-center space-x-2 sm:space-x-4">
         {/* Demo Plan Selector */}

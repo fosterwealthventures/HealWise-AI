@@ -19,7 +19,7 @@ const NavItem: React.FC<{ icon: React.ReactElement; label: string; isActive: boo
     onClick={onClick}
     className={`flex items-center w-full px-4 py-3 text-left transition-colors duration-200 rounded-lg relative ${
       isActive
-        ? 'bg-brand-green/10 text-brand-green-dark dark:bg-brand-green/20 font-semibold'
+        ? 'bg-brand-green/10 text-brand-green-dark dark:bg-brand-green/20 dark:text-white font-semibold'
         : isAction 
         ? 'bg-brand-green-dark text-white hover:bg-brand-green-dark/90'
         : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-brand-charcoal-light/60 dark:hover:text-brand-cream'
@@ -34,7 +34,18 @@ const NavItem: React.FC<{ icon: React.ReactElement; label: string; isActive: boo
   </button>
 );
 
-const Sidebar: React.FC<{ activeView: string; setActiveView: (view: string) => void; plannerItemCount: number; }> = ({ activeView, setActiveView, plannerItemCount }) => {
+const Sidebar: React.FC<{ 
+  activeView: string; 
+  setActiveView: (view: string) => void; 
+  plannerItemCount: number;
+  isMobileOpen: boolean;
+  setMobileOpen: (isOpen: boolean) => void;
+}> = ({ activeView, setActiveView, plannerItemCount, isMobileOpen, setMobileOpen }) => {
+  const handleNavigation = (view: string) => {
+    setActiveView(view);
+    setMobileOpen(false);
+  };
+  
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <DashboardIcon /> },
     { id: 'planner', label: 'My Planner', icon: <PlannerIcon />, count: plannerItemCount },
@@ -43,7 +54,7 @@ const Sidebar: React.FC<{ activeView: string; setActiveView: (view: string) => v
   ];
 
   return (
-    <aside className="w-64 bg-white/80 backdrop-blur-sm border-r border-gray-200/80 dark:bg-brand-charcoal-light/50 dark:border-gray-700/60 flex-shrink-0 flex-col hidden lg:flex">
+    <aside className={`fixed inset-y-0 left-0 z-30 w-64 bg-white/80 backdrop-blur-sm border-r border-gray-200/80 dark:bg-brand-charcoal-light/50 dark:border-gray-700/60 flex-shrink-0 flex flex-col transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="h-24 flex items-center justify-start pl-4 border-b border-gray-200/80 dark:border-gray-700/60">
          <Logo />
       </div>
@@ -54,7 +65,7 @@ const Sidebar: React.FC<{ activeView: string; setActiveView: (view: string) => v
             icon={item.icon}
             label={item.label}
             isActive={activeView === item.id}
-            onClick={() => setActiveView(item.id)}
+            onClick={() => handleNavigation(item.id)}
             count={item.count}
           />
         ))}
@@ -64,7 +75,7 @@ const Sidebar: React.FC<{ activeView: string; setActiveView: (view: string) => v
             icon={<UpgradeIcon />}
             label="Upgrade to Pro"
             isActive={activeView === 'pricing'}
-            onClick={() => setActiveView('pricing')}
+            onClick={() => handleNavigation('pricing')}
             isAction={true}
           />
       </div>

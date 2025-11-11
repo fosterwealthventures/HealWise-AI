@@ -26,11 +26,41 @@ const DetailsDrawer: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     </div>
 );
 
-const RecipeCard: React.FC<{ item: RecipeResult; restrictions: string }> = ({ item, restrictions }) => {
+const RecipeCard: React.FC<{
+    item: RecipeResult;
+    restrictions: string;
+    plan: SubscriptionPlan;
+    onAddToPlanner: (item: Omit<PlannerItem, 'id' | 'savedAt'>) => void;
+    moduleType: ModuleType;
+}> = ({ item, restrictions, plan, onAddToPlanner, moduleType }) => {
     const [currentRecipe, setCurrentRecipe] = useState<RecipeResult>(item);
     const [variationPrompt, setVariationPrompt] = useState('');
     const [isVarying, setIsVarying] = useState(false);
     const [variationError, setVariationError] = useState<string | null>(null);
+    
+    const [isSaving, setIsSaving] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
+    const [note, setNote] = useState('');
+
+    const handleSaveClick = () => setIsSaving(true);
+    const handleCancelSave = () => { setIsSaving(false); setNote(''); };
+    const handleConfirmSave = () => {
+        try {
+            onAddToPlanner({
+                moduleType,
+                result: currentRecipe,
+                note,
+            });
+            setIsSaved(true);
+            setTimeout(() => setIsSaved(false), 2500);
+        } catch (error) {
+            console.error("Failed to save item to planner:", error);
+            alert("There was an error saving your item. Please try again.");
+        } finally {
+            handleCancelSave();
+        }
+    };
+
 
     const handleVariationSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -53,8 +83,8 @@ const RecipeCard: React.FC<{ item: RecipeResult; restrictions: string }> = ({ it
     <>
       <div className="flex justify-between items-start">
           <div>
-              <h4 className="font-bold text-amber-600">{currentRecipe.recipeName}</h4>
-              <span className="text-xs font-semibold text-gray-400 uppercase">{currentRecipe.recipeType}</span>
+              <h4 className="font-bold text-amber-600 dark:text-amber-400">{currentRecipe.recipeName}</h4>
+              <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase">{currentRecipe.recipeType}</span>
           </div>
       </div>
       <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">{currentRecipe.description}</p>
@@ -103,13 +133,50 @@ const RecipeCard: React.FC<{ item: RecipeResult; restrictions: string }> = ({ it
                 </div>
             )}
         </div>
+         {(plan === 'pro' || plan === 'premium') && (
+            <div className="mt-4 pt-4 border-t border-dashed border-gray-200/80 dark:border-gray-700/60">
+            {isSaving ? (
+                <div className="w-full flex flex-col sm:flex-row gap-2 animate-fade-in">
+                    <input
+                        type="text"
+                        value={note}
+                        onChange={(e) => setNote(e.target.value)}
+                        placeholder="Add a note (e.g., 'Try this weekend')..."
+                        className="flex-grow w-full px-3 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-brand-green focus:border-brand-green outline-none transition bg-white dark:bg-brand-charcoal dark:text-brand-cream"
+                        aria-label="Note for planner"
+                        autoFocus
+                    />
+                    <button onClick={handleCancelSave} className="px-3 py-1.5 text-xs font-semibold bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors">
+                        Cancel
+                    </button>
+                    <button onClick={handleConfirmSave} className="px-3 py-1.5 text-xs font-semibold bg-brand-green text-white rounded-md hover:bg-brand-green/90 transition-colors">
+                        Confirm Save
+                    </button>
+                </div>
+            ) : (
+                <div className="flex items-center justify-end">
+                    {isSaved ? (
+                        <div className="flex items-center space-x-1.5 text-xs font-medium text-brand-green dark:text-brand-green-light">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            <span>Saved!</span>
+                        </div>
+                    ) : (
+                        <button onClick={handleSaveClick} className="flex items-center space-x-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-brand-green-dark dark:hover:text-brand-green-light transition-colors">
+                            <BookmarkIcon />
+                            <span>Save to Planner</span>
+                        </button>
+                    )}
+                </div>
+            )}
+            </div>
+        )}
     </>
   );
 };
 
 const MedsAnalysisCard: React.FC<{ item: MedsAnalysisResult }> = ({ item }) => (
     <div>
-        <h4 className="font-bold text-amber-600 text-lg mb-4">Medication Analysis</h4>
+        <h4 className="font-bold text-amber-600 dark:text-amber-400 text-lg mb-4">Medication Analysis</h4>
 
         {item.allergyWarnings && item.allergyWarnings.length > 0 && (
             <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/50 border border-amber-200 dark:border-amber-800/60 rounded-lg">
@@ -203,7 +270,7 @@ const ResultsCard: React.FC<ResultsCardProps> = ({ result, moduleType, restricti
         const item = result as FoodResult;
         return (
           <>
-            <h4 className="font-bold text-brand-green-dark">{item.name}</h4>
+            <h4 className="font-bold text-brand-green-dark dark:text-brand-green-light">{item.name}</h4>
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">{item.description}</p>
             {showDetails && <DetailsDrawer>
                 <>
@@ -221,12 +288,12 @@ const ResultsCard: React.FC<ResultsCardProps> = ({ result, moduleType, restricti
         const videoId = item.youtubeLink ? getYouTubeId(item.youtubeLink) : null;
         return (
           <>
-            <h4 className="font-bold text-brand-green-dark">{item.name}</h4>
+            <h4 className="font-bold text-brand-green-dark dark:text-brand-green-light">{item.name}</h4>
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">{item.benefits}</p>
             {videoId && (
               <button 
                 onClick={() => onPlayVideo(videoId)} 
-                className="mt-2 inline-flex items-center text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
+                className="mt-2 inline-flex items-center text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
               >
                   <YoutubeIcon /> Watch on YouTube
               </button>
@@ -241,7 +308,7 @@ const ResultsCard: React.FC<ResultsCardProps> = ({ result, moduleType, restricti
         return <MedsAnalysisCard item={result as MedsAnalysisResult} />;
       }
       case ModuleType.Recipe: {
-        return <RecipeCard item={result as RecipeResult} restrictions={restrictions} />;
+        return <RecipeCard item={result as RecipeResult} restrictions={restrictions} plan={plan} onAddToPlanner={onAddToPlanner} moduleType={moduleType} />;
       }
       default:
         return null;
@@ -249,61 +316,66 @@ const ResultsCard: React.FC<ResultsCardProps> = ({ result, moduleType, restricti
   };
 
   const hasDetails = moduleType === ModuleType.Food || moduleType === ModuleType.Herbs;
-  const isMedOrRecipe = moduleType === ModuleType.Meds || moduleType === ModuleType.Recipe;
+  const showGenericActions = moduleType === ModuleType.Food || moduleType === ModuleType.Herbs;
 
   return (
     <div className="p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200/80 dark:border-gray-700/80 shadow-sm animate-fade-in flex flex-col">
         <div className="flex-grow">{renderContent()}</div>
         
-        {isSaving && (
-          <div className="mt-4 pt-4 border-t border-gray-200/80 dark:border-gray-700">
-            <div className="w-full flex items-center space-x-2 animate-fade-in">
-                <input
-                    type="text"
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    placeholder="Add a note (e.g., 'Try this weekend')..."
-                    className="flex-grow w-full px-3 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-brand-green focus:border-brand-green outline-none transition bg-white dark:bg-brand-charcoal dark:text-brand-cream"
-                    aria-label="Note for planner"
-                    autoFocus
-                />
-                <button onClick={handleCancelSave} className="px-3 py-1.5 text-xs font-semibold bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors">
-                    Cancel
-                </button>
-                <button onClick={handleConfirmSave} className="px-3 py-1.5 text-xs font-semibold bg-brand-green text-white rounded-md hover:bg-brand-green/90 transition-colors">
-                    Confirm Save
-                </button>
-            </div>
-          </div>
-        )}
-
-        {!isSaving && !isMedOrRecipe && <div className="mt-4 h-px bg-gray-200/80 dark:border-gray-700"></div>}
-        
-        {!isSaving &&
-          <div className="mt-3 flex items-center justify-end space-x-3">
-              {hasDetails && (
-                <button onClick={() => setShowDetails(!showDetails)} className="flex items-center space-x-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-brand-green-dark dark:hover:text-brand-green-light transition-colors">
-                    <BookOpenIcon />
-                    <span>{showDetails ? 'Hide Details' : 'View Details'}</span>
-                </button>
-              )}
-              {(plan === 'pro' || plan === 'premium') && (
-                <>
-                  {isSaved ? (
-                    <div className="flex items-center space-x-1.5 text-xs font-medium text-brand-green">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                        <span>Saved!</span>
+        {showGenericActions && (
+            <>
+                {isSaving && (
+                    <div className="mt-4 pt-4 border-t border-gray-200/80 dark:border-gray-700">
+                        <div className="w-full flex flex-col sm:flex-row gap-2 animate-fade-in">
+                            <input
+                                type="text"
+                                value={note}
+                                onChange={(e) => setNote(e.target.value)}
+                                placeholder="Add a note (e.g., 'Try this weekend')..."
+                                className="flex-grow w-full px-3 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-brand-green focus:border-brand-green outline-none transition bg-white dark:bg-brand-charcoal dark:text-brand-cream"
+                                aria-label="Note for planner"
+                                autoFocus
+                            />
+                            <button onClick={handleCancelSave} className="px-3 py-1.5 text-xs font-semibold bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors">
+                                Cancel
+                            </button>
+                            <button onClick={handleConfirmSave} className="px-3 py-1.5 text-xs font-semibold bg-brand-green text-white rounded-md hover:bg-brand-green/90 transition-colors">
+                                Confirm Save
+                            </button>
+                        </div>
                     </div>
-                  ) : (
-                    <button onClick={handleSaveClick} className="flex items-center space-x-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-brand-green-dark dark:hover:text-brand-green-light transition-colors">
-                      <BookmarkIcon />
-                      <span>Save to Planner</span>
-                    </button>
-                  )}
-                </>
-              )}
-          </div>
-        }
+                )}
+
+                {!isSaving && (
+                    <>
+                        <div className="mt-4 h-px bg-gray-200/80 dark:bg-gray-700"></div>
+                        <div className="mt-3 flex items-center justify-end space-x-3">
+                            {hasDetails && (
+                                <button onClick={() => setShowDetails(!showDetails)} className="flex items-center space-x-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-brand-green-dark dark:hover:text-brand-green-light transition-colors">
+                                    <BookOpenIcon />
+                                    <span>{showDetails ? 'Hide Details' : 'View Details'}</span>
+                                </button>
+                            )}
+                            {(plan === 'pro' || plan === 'premium') && (
+                                <>
+                                    {isSaved ? (
+                                        <div className="flex items-center space-x-1.5 text-xs font-medium text-brand-green dark:text-brand-green-light">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                            <span>Saved!</span>
+                                        </div>
+                                    ) : (
+                                        <button onClick={handleSaveClick} className="flex items-center space-x-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-brand-green-dark dark:hover:text-brand-green-light transition-colors">
+                                            <BookmarkIcon />
+                                            <span>Save to Planner</span>
+                                        </button>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </>
+                )}
+            </>
+        )}
     </div>
   );
 };

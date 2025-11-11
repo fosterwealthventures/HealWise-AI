@@ -120,6 +120,9 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete, restricti
         <div className="flex-grow flex flex-col justify-center">{renderStepContent()}</div>
 
         <div className="mt-8">
+            <p className="text-center text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                Step {step} of {totalSteps}
+            </p>
             <div className="flex justify-center space-x-2 mb-6">
                 {Array.from({ length: totalSteps }).map((_, i) => (
                     <div key={i} className={`h-2 w-2 rounded-full transition-all ${step === i + 1 ? 'w-6 bg-brand-green' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
@@ -134,7 +137,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete, restricti
                 </div>
             ) : (
               <div className="flex items-center justify-between">
-                  <button onClick={handleBack} className="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors">
+                  <button onClick={handleBack} className="px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-transparent hover:bg-gray-200/60 dark:hover:bg-brand-charcoal rounded-lg transition-colors">
                       Back
                   </button>
 

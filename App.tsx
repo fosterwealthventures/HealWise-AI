@@ -32,6 +32,8 @@ const App: React.FC = () => {
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -97,9 +99,29 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-brand-cream font-sans text-brand-charcoal dark:bg-brand-charcoal dark:text-brand-cream">
-      <Sidebar activeView={activeView} setActiveView={setActiveView} plannerItemCount={plannerItems.length} />
+      {isMobileSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
+          onClick={() => setIsMobileSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+      <Sidebar 
+        activeView={activeView} 
+        setActiveView={setActiveView} 
+        plannerItemCount={plannerItems.length}
+        isMobileOpen={isMobileSidebarOpen}
+        setMobileOpen={setIsMobileSidebarOpen}
+      />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header currentPlan={plan} setPlan={setPlan} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} setActiveView={setActiveView} />
+        <Header 
+            currentPlan={plan} 
+            setPlan={setPlan} 
+            isDarkMode={isDarkMode} 
+            toggleDarkMode={toggleDarkMode} 
+            setActiveView={setActiveView}
+            toggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+        />
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-6 lg:p-10">
           {renderView()}
         </main>

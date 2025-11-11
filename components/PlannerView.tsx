@@ -30,7 +30,7 @@ const PlannerItemCard: React.FC<{
             <Icon />
             <span className="ml-2">{name}</span>
           </div>
-          <p className="text-xs text-gray-400 mt-1">Saved on {savedDate}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Saved on {savedDate}</p>
         </div>
         <button 
             onClick={() => onDelete(item.id)}

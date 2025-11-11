@@ -204,6 +204,16 @@ const DashboardView: React.FC<{
   const handleCloseVideo = () => {
     setPlayingVideoId(null);
   };
+  
+  const scrollToModule = (moduleId: string) => {
+    document.getElementById(moduleId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  const quickAccessButtons = [
+    { type: ModuleType.Food, label: 'Food Recommender', icon: <AppleIcon />, id: `module-${ModuleType.Food}` },
+    { type: ModuleType.Herbs, label: 'Herbal Recommender', icon: <LeafIcon />, id: `module-${ModuleType.Herbs}` },
+    { type: ModuleType.Recipe, label: 'Recipe Generator', icon: <BlenderIcon />, id: `module-${ModuleType.Recipe}` },
+  ];
 
   return (
     <>
@@ -218,10 +228,29 @@ const DashboardView: React.FC<{
       
       <RestrictionsDisplay restrictions={restrictions} onEdit={() => setActiveView('profile')} />
 
+      <div className="my-8 animate-fade-in">
+        <h3 className="text-lg font-bold text-brand-charcoal dark:text-brand-cream mb-4">Quick Access</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {quickAccessButtons.map(btn => (
+                <button
+                    key={btn.id}
+                    onClick={() => scrollToModule(btn.id)}
+                    className="flex items-center p-4 bg-white dark:bg-brand-charcoal-light rounded-xl shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300"
+                >
+                    <div className={`p-2 rounded-full ${modules.find(m => m.type === btn.type)?.colorClasses.icon}`}>
+                        {React.cloneElement(btn.icon, { className: 'h-5 w-5' })}
+                    </div>
+                    <span className="ml-3 font-semibold text-brand-charcoal dark:text-brand-cream">{btn.label}</span>
+                </button>
+            ))}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {modules.map((module) => (
           <ModuleCard
             key={module.type}
+            id={`module-${module.type}`}
             module={module}
             plan={plan}
             restrictions={restrictions}

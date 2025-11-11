@@ -1,7 +1,8 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { ModuleType, SubscriptionPlan, ApiResult, PlannerItem } from '../types';
 import { generateRecommendation } from '../services/geminiService';
 import ResultsCard from './ResultsCard';
+import ContextualTip from './ContextualTip';
 
 interface ModuleConfig {
     type: ModuleType;
@@ -18,6 +19,7 @@ interface ModuleConfig {
 }
 
 interface ModuleCardProps {
+  id?: string;
   module: ModuleConfig;
   plan: SubscriptionPlan;
   restrictions: string;
@@ -29,12 +31,58 @@ interface ModuleCardProps {
   setSharedInput?: (value: string) => void;
 }
 
-const ModuleCard: React.FC<ModuleCardProps> = ({ module, plan, restrictions, onPlayVideo, onSubmission, onAddToPlanner, remainingUsage, sharedInput, setSharedInput }) => {
+const getTipContent = (moduleType: ModuleType): React.ReactNode => {
+  switch (moduleType) {
+    case ModuleType.Food:
+      return <p>Enter a health condition (like 'high blood pressure') to discover whole foods that may offer support. Be specific for better results!</p>;
+    case ModuleType.Herbs:
+      return <p>Looking for natural remedies? Type in a condition or a body system (e.g., 'digestive health') to find relevant herbs and their benefits.</p>;
+    case ModuleType.Meds:
+      return <p>List your medications, supplements, and OTC drugs to understand how they work, check for interactions, and get warnings based on your profile.</p>;
+    case ModuleType.Recipe:
+      return <p>Need a healthy meal idea? Enter a condition ('anti-inflammatory') or an ingredient ('kale') to generate a custom juice, smoothie, or tea recipe.</p>;
+    default:
+      return '';
+  }
+};
+
+
+const ModuleCard: React.FC<ModuleCardProps> = ({ id, module, plan, restrictions, onPlayVideo, onSubmission, onAddToPlanner, remainingUsage, sharedInput, setSharedInput }) => {
   const [itemInputs, setItemInputs] = useState<string[]>(['']);
   const [recipeType, setRecipeType] = useState<'Juice' | 'Smoothie' | 'Tea'>('Juice');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<ApiResult[] | null>(null);
+  const [showTip, setShowTip] = useState(false);
+
+  useEffect(() => {
+    try {
+      const seenTipsRaw = localStorage.getItem('healwiseModuleTipsSeen');
+      const seenTips: ModuleType[] = seenTipsRaw ? JSON.parse(seenTipsRaw) : [];
+      if (!seenTips.includes(module.type)) {
+        setShowTip(true);
+      }
+    } catch (e) {
+      console.error("Failed to parse module tips from localStorage", e);
+      setShowTip(false);
+    }
+  }, [module.type]);
+
+  const handleDismissTip = () => {
+    try {
+        const seenTipsRaw = localStorage.getItem('healwiseModuleTipsSeen');
+        const seenTips: ModuleType[] = seenTipsRaw ? JSON.parse(seenTipsRaw) : [];
+        if (!seenTips.includes(module.type)) {
+            const updatedTips = [...seenTips, module.type];
+            localStorage.setItem('healwiseModuleTipsSeen', JSON.stringify(updatedTips));
+        }
+    } catch (e) {
+        console.error("Failed to update module tips in localStorage", e);
+    } finally {
+        setShowTip(false);
+    }
+  };
+
 
   const isFreeRecommender = plan === 'free' && module.type !== ModuleType.Meds;
 
@@ -104,7 +152,14 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ module, plan, restrictions, onP
   const selectedColor = colorClasses;
 
   return (
-    <div className="bg-white dark:bg-brand-charcoal-light rounded-2xl shadow-card p-6 flex flex-col min-h-[400px]">
+    <div id={id} className="relative bg-white dark:bg-brand-charcoal-light rounded-2xl shadow-card p-6 flex flex-col min-h-[400px]">
+      {showTip && (
+        <ContextualTip
+          title={`Pro Tip for ${title}`}
+          content={getTipContent(module.type)}
+          onDismiss={handleDismissTip}
+        />
+      )}
       <div className="flex items-center">
         <div className={`p-3 rounded-full ${selectedColor.icon}`}>
             {React.cloneElement(icon, { className: 'h-6 w-6' })}
@@ -117,7 +172,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ module, plan, restrictions, onP
           <div className="animate-fade-in-up">
             <div className="flex justify-between items-center mb-4">
               <h4 className="font-semibold text-brand-charcoal dark:text-brand-cream">AI Recommendations</h4>
-              <button onClick={() => setResults(null)} className="text-sm font-medium text-brand-green-dark hover:underline">New Search</button>
+              <button onClick={() => setResults(null)} className="text-sm font-medium text-brand-green-dark hover:underline dark:text-brand-green-light">New Search</button>
             </div>
             <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
               {results.map((result, index) => (
@@ -149,7 +204,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ module, plan, restrictions, onP
                 </div>
               ))}
                {plan !== 'free' && canAddMore && (
-                  <button onClick={handleAddItem} className="text-sm font-medium text-brand-green-dark hover:underline" disabled={isLoading || isLimitReached}>
+                  <button onClick={handleAddItem} className="text-sm font-medium text-brand-green-dark hover:underline dark:text-brand-green-light" disabled={isLoading || isLimitReached}>
                     + Add another item (up to {maxInputsForPlan})
                   </button>
                 )}
