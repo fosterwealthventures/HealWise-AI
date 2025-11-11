@@ -7,6 +7,8 @@ import OnboardingModal from './components/OnboardingModal';
 import PlannerView from './components/PlannerView';
 import ProfileView from './components/ProfileView';
 import AppFooter from './components/AppFooter';
+import PaymentSuccessView from './components/PaymentSuccessView';
+import PaymentCancelView from './components/PaymentCancelView';
 import { SubscriptionPlan, PlannerItem } from './types';
 
 const App: React.FC = () => {
@@ -64,9 +66,16 @@ const App: React.FC = () => {
   };
 
   const handlePlanSelect = (selectedPlan: SubscriptionPlan) => {
-    setPlan(selectedPlan);
-    alert(`You are now on the ${selectedPlan} plan!`);
-    setActiveView('dashboard');
+    if (selectedPlan === 'free') {
+      setPlan('free');
+      alert(`You are now on the Free plan!`);
+      setActiveView('dashboard');
+    } else {
+      // In a real app, this would initiate the Stripe checkout flow.
+      // We simulate a successful payment and redirect to our success page.
+      setPlan(selectedPlan);
+      setActiveView('payment-success');
+    }
   };
 
   const handleAddToPlanner = (itemToAdd: Omit<PlannerItem, 'id' | 'savedAt'>) => {
@@ -85,13 +94,17 @@ const App: React.FC = () => {
       case 'dashboard':
         return <DashboardView plan={plan} restrictions={restrictions} onAddToPlanner={handleAddToPlanner} setActiveView={setActiveView} />;
       case 'pricing':
-        return <PricingPage onSelectPlan={handlePlanSelect} />;
+        return <PricingPage onSelectPlan={handlePlanSelect} setActiveView={setActiveView} />;
       case 'planner':
         return <PlannerView items={plannerItems} setItems={setPlannerItems} />;
       case 'profile':
         return <ProfileView restrictions={restrictions} setRestrictions={setRestrictions} />;
       case 'shop':
         return <div className="text-center p-10 dark:text-brand-cream">Shop View - Coming Soon!</div>;
+      case 'payment-success':
+        return <PaymentSuccessView plan={plan} setActiveView={setActiveView} />;
+      case 'payment-cancel':
+        return <PaymentCancelView setActiveView={setActiveView} />;
       default:
         return <DashboardView plan={plan} restrictions={restrictions} onAddToPlanner={handleAddToPlanner} setActiveView={setActiveView} />;
     }

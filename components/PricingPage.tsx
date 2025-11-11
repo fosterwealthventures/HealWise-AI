@@ -53,10 +53,10 @@ const PlanCard: React.FC<{
 };
 
 
-const PricingPage: React.FC<{ onSelectPlan: (plan: SubscriptionPlan) => void }> = ({ onSelectPlan }) => {
-  const handlePaidPlanClick = (planName: string) => {
-    alert(`Stripe integration for the ${planName} plan is coming soon! This would redirect to a checkout page.`);
-  }
+const PricingPage: React.FC<{ 
+  onSelectPlan: (plan: SubscriptionPlan) => void;
+  setActiveView: (view: string) => void;
+}> = ({ onSelectPlan, setActiveView }) => {
 
   return (
     <div className="animate-fade-in">
@@ -95,7 +95,7 @@ const PricingPage: React.FC<{ onSelectPlan: (plan: SubscriptionPlan) => void }> 
             "Save recommendations to planner",
           ]}
           isFeatured={true}
-          onSelect={() => handlePaidPlanClick('Pro')}
+          onSelect={() => onSelectPlan('pro')}
           buttonText="Upgrade to Pro"
         />
         <PlanCard
@@ -109,13 +109,21 @@ const PricingPage: React.FC<{ onSelectPlan: (plan: SubscriptionPlan) => void }> 
             "Personalized wellness plans (coming soon)",
             "Early access to new features",
           ]}
-          onSelect={() => handlePaidPlanClick('Premium')}
+          onSelect={() => onSelectPlan('premium')}
           buttonText="Upgrade to Premium"
         />
       </div>
        <p className="text-center mt-8 text-gray-500 dark:text-gray-400 text-sm">
-        Note: The Pro and Premium plans will be enabled via Stripe integration. The buttons are currently placeholders.
+        Clicking 'Upgrade' will simulate a successful payment via Stripe for demo purposes.
       </p>
+      <div className="text-center mt-4">
+        <button 
+          onClick={() => setActiveView('payment-cancel')} 
+          className="text-sm text-gray-500 dark:text-gray-400 hover:underline"
+        >
+          Simulate a canceled payment
+        </button>
+       </div>
     </div>
   );
 };
