@@ -108,12 +108,40 @@ const getInitialMonthlyUsage = (): MonthlyUsage => {
 };
 
 
+const RestrictionsDisplay: React.FC<{ restrictions: string; onEdit: () => void; }> = ({ restrictions, onEdit }) => (
+  <div className="mb-8 p-6 bg-white dark:bg-brand-charcoal-light rounded-2xl shadow-card animate-fade-in">
+    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+      <h3 className="text-lg font-bold text-brand-charcoal dark:text-brand-cream flex items-center">
+        <AllergyIcon />
+        <span className="ml-3">Dietary Restrictions</span>
+      </h3>
+      <button 
+        onClick={onEdit}
+        className="px-4 py-2 text-sm font-semibold text-brand-green-dark bg-brand-green/10 hover:bg-brand-green/20 dark:text-brand-green-light dark:bg-brand-green/20 dark:hover:bg-brand-green/30 rounded-lg transition-colors flex-shrink-0"
+      >
+        {restrictions ? 'Edit in Profile' : 'Add in Profile'}
+      </button>
+    </div>
+    <div className="mt-3 pt-3 border-t border-gray-200/60 dark:border-gray-700/60">
+      {restrictions ? (
+        <p className="text-sm text-gray-600 dark:text-gray-300 italic">
+          {restrictions}
+        </p>
+      ) : (
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          No restrictions set. Add your allergies or dietary needs in your profile for safer, personalized recommendations.
+        </p>
+      )}
+    </div>
+  </div>
+);
+
 const DashboardView: React.FC<{
   plan: SubscriptionPlan;
   restrictions: string;
-  setRestrictions: (value: string) => void;
   onAddToPlanner: (item: Omit<PlannerItem, 'id' | 'savedAt'>) => void;
-}> = ({ plan, restrictions, setRestrictions, onAddToPlanner }) => {
+  setActiveView: (view: string) => void;
+}> = ({ plan, restrictions, onAddToPlanner, setActiveView }) => {
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
   const [dailyUsage, setDailyUsage] = useState<DailyUsage>(getInitialDailyUsage);
   const [monthlyUsage, setMonthlyUsage] = useState<MonthlyUsage>(getInitialMonthlyUsage);
@@ -188,22 +216,7 @@ const DashboardView: React.FC<{
         </p>
       </div>
       
-      <div className="mb-8 p-6 bg-white dark:bg-brand-charcoal-light rounded-2xl shadow-card animate-fade-in">
-          <h3 className="text-lg font-bold text-brand-charcoal dark:text-brand-cream flex items-center">
-            <AllergyIcon />
-            <span className="ml-3">Dietary Restrictions & Allergies</span>
-          </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            List any items you need to avoid. All recommendations will exclude these.
-          </p>
-          <input
-            type="text"
-            value={restrictions}
-            onChange={(e) => setRestrictions(e.target.value)}
-            placeholder="e.g., Allergic to peanuts, gluten-free, no shellfish"
-            className="mt-4 w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-brand-charcoal focus:ring-2 focus:ring-brand-green focus:border-transparent outline-none transition dark:placeholder-gray-500 dark:text-brand-cream"
-          />
-      </div>
+      <RestrictionsDisplay restrictions={restrictions} onEdit={() => setActiveView('profile')} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {modules.map((module) => (

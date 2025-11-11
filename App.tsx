@@ -5,6 +5,7 @@ import DashboardView from './components/DashboardView';
 import PricingPage from './components/PricingPage';
 import OnboardingModal from './components/OnboardingModal';
 import PlannerView from './components/PlannerView';
+import ProfileView from './components/ProfileView';
 import AppFooter from './components/AppFooter';
 import { SubscriptionPlan, PlannerItem } from './types';
 
@@ -80,15 +81,17 @@ const App: React.FC = () => {
   const renderView = () => {
     switch(activeView) {
       case 'dashboard':
-        return <DashboardView plan={plan} restrictions={restrictions} setRestrictions={setRestrictions} onAddToPlanner={handleAddToPlanner} />;
+        return <DashboardView plan={plan} restrictions={restrictions} onAddToPlanner={handleAddToPlanner} setActiveView={setActiveView} />;
       case 'pricing':
         return <PricingPage onSelectPlan={handlePlanSelect} />;
       case 'planner':
         return <PlannerView items={plannerItems} setItems={setPlannerItems} />;
+      case 'profile':
+        return <ProfileView restrictions={restrictions} setRestrictions={setRestrictions} />;
       case 'shop':
         return <div className="text-center p-10 dark:text-brand-cream">Shop View - Coming Soon!</div>;
       default:
-        return <DashboardView plan={plan} restrictions={restrictions} setRestrictions={setRestrictions} onAddToPlanner={handleAddToPlanner} />;
+        return <DashboardView plan={plan} restrictions={restrictions} onAddToPlanner={handleAddToPlanner} setActiveView={setActiveView} />;
     }
   }
 
@@ -96,7 +99,7 @@ const App: React.FC = () => {
     <div className="flex h-screen bg-brand-cream font-sans text-brand-charcoal dark:bg-brand-charcoal dark:text-brand-cream">
       <Sidebar activeView={activeView} setActiveView={setActiveView} plannerItemCount={plannerItems.length} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header currentPlan={plan} setPlan={setPlan} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+        <Header currentPlan={plan} setPlan={setPlan} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} setActiveView={setActiveView} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-6 lg:p-10">
           {renderView()}
         </main>

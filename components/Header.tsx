@@ -25,7 +25,7 @@ const DarkModeToggle: React.FC<{ isDarkMode: boolean; toggleDarkMode: () => void
 );
 
 
-const Header: React.FC<{ currentPlan: SubscriptionPlan; setPlan: (plan: SubscriptionPlan) => void; isDarkMode: boolean; toggleDarkMode: () => void; }> = ({ currentPlan, setPlan, isDarkMode, toggleDarkMode }) => {
+const Header: React.FC<{ currentPlan: SubscriptionPlan; setPlan: (plan: SubscriptionPlan) => void; isDarkMode: boolean; toggleDarkMode: () => void; setActiveView: (view: string) => void; }> = ({ currentPlan, setPlan, isDarkMode, toggleDarkMode, setActiveView }) => {
   return (
     <header className="h-24 bg-brand-cream/80 backdrop-blur-sm dark:bg-brand-charcoal/80 flex-shrink-0 flex items-center justify-between px-6 lg:px-10 border-b border-gray-200/80 dark:border-gray-700/60">
       <div>
@@ -55,9 +55,13 @@ const Header: React.FC<{ currentPlan: SubscriptionPlan; setPlan: (plan: Subscrip
           </svg>
         </button>
         <DarkModeToggle isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-green to-brand-green-light flex items-center justify-center text-white font-bold text-lg shadow-inner">
+        <button
+          onClick={() => setActiveView('profile')}
+          className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-green to-brand-green-light flex items-center justify-center text-white font-bold text-lg shadow-inner transition-transform transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-brand-cream dark:focus:ring-offset-brand-charcoal focus:ring-brand-green"
+          aria-label="Open user profile"
+        >
           U
-        </div>
+        </button>
       </div>
     </header>
   );
