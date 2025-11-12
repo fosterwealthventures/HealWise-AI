@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import DashboardView from './components/DashboardView';
@@ -11,7 +12,7 @@ import PaymentSuccessView from './components/PaymentSuccessView';
 import PaymentCancelView from './components/PaymentCancelView';
 import { SubscriptionPlan, PlannerItem } from './types';
 
-const App: React.FC = () => {
+const DashboardShell: React.FC = () => {
   const [activeView, setActiveView] = useState('dashboard');
   const [plan, setPlan] = useState<SubscriptionPlan>('free');
   const [restrictions, setRestrictions] = useState(() => localStorage.getItem('healwiseRestrictions') || '');
@@ -150,5 +151,14 @@ const App: React.FC = () => {
     </div>
   );
 };
+
+const App: React.FC = () => (
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Navigate to="/healwise/dashboard" replace />} />
+      <Route path="/healwise/dashboard" element={<DashboardShell />} />
+    </Routes>
+  </BrowserRouter>
+);
 
 export default App;
