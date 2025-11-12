@@ -5,10 +5,10 @@ import VideoPlayerModal from './VideoPlayerModal';
 import { AppleIcon, LeafIcon, PillIcon, BlenderIcon } from './icons/ModuleIcons';
 
 const moduleInfo = {
-  [ModuleType.Food]: { name: 'Food', Icon: AppleIcon, color: 'text-brand-green-dark' },
-  [ModuleType.Herbs]: { name: 'Herb', Icon: LeafIcon, color: 'text-brand-green-dark' },
-  [ModuleType.Meds]: { name: 'Meds Analysis', Icon: PillIcon, color: 'text-amber-600' },
-  [ModuleType.Recipe]: { name: 'Recipe', Icon: BlenderIcon, color: 'text-amber-600' },
+  [ModuleType.Food]: { name: 'Food Insight', Icon: AppleIcon, color: 'text-brand-green-dark' },
+  [ModuleType.Herbs]: { name: 'Herbal Note', Icon: LeafIcon, color: 'text-brand-green-dark' },
+  [ModuleType.Meds]: { name: 'Medication Decoder', Icon: PillIcon, color: 'text-amber-600' },
+  [ModuleType.Recipe]: { name: 'Recipe Idea', Icon: BlenderIcon, color: 'text-amber-600' },
 };
 
 const PlannerItemCard: React.FC<{
@@ -67,7 +67,7 @@ const PlannerView: React.FC<{
 
   const handleExport = () => {
     if (items.length === 0) {
-      alert("Your planner is empty. Nothing to export!");
+      alert("Your planner is empty. No saved insights to export yet!");
       return;
     }
 
@@ -103,7 +103,7 @@ const PlannerView: React.FC<{
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
             <div>
                 <h1 className="text-3xl font-bold text-brand-charcoal dark:text-brand-cream">My Wellness Planner</h1>
-                <p className="text-gray-500 dark:text-gray-400 mt-1">Review, manage, and export your saved recommendations.</p>
+                <p className="text-gray-500 dark:text-gray-400 mt-1">Review, reflect, and export the learning cards you’ve saved.</p>
             </div>
             <div className="flex items-center gap-x-3">
                  <button 
@@ -135,7 +135,7 @@ const PlannerView: React.FC<{
                 <svg className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
                 <h2 className="mt-4 text-xl font-semibold text-brand-charcoal dark:text-brand-cream">Your Planner is Empty</h2>
                 <p className="mt-2 text-gray-500 dark:text-gray-400">
-                    You haven't saved any recommendations yet. Go to the Dashboard to analyze a condition and save items to your planner!
+                    You haven't saved any insights yet. Visit the Dashboard, explore a topic, and pin your favorite learnings to this space.
                 </p>
             </div>
         </div>

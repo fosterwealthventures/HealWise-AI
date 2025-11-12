@@ -73,15 +73,15 @@ const Sidebar: React.FC<{
       <div className="p-4">
         <NavItem
             icon={<UpgradeIcon />}
-            label="Upgrade to Pro"
+            label="Unlock Pro Learning"
             isActive={activeView === 'pricing'}
             onClick={() => handleNavigation('pricing')}
             isAction={true}
           />
       </div>
       <div className="p-6 border-t border-gray-200/80 dark:border-gray-700/60">
-          <h4 className="font-semibold text-brand-green-dark dark:text-brand-cream">Food-First, Faith-Friendly</h4>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Your journey to holistic wellness starts here.</p>
+          <h4 className="font-semibold text-brand-green-dark dark:text-brand-cream">Learning-first, faith-friendly</h4>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Translate trusted wellness research into everyday reflections.</p>
       </div>
     </aside>
   );

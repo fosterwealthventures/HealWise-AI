@@ -50,8 +50,8 @@ const Header: React.FC<{
             <HamburgerIcon />
         </button>
         <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-brand-charcoal dark:text-brand-cream">Your Path to Wellness</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 hidden sm:block">Discover personalized, food-first recommendations.</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-brand-charcoal dark:text-brand-cream">Your Wellness Learning Studio</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 hidden sm:block">Explore plain-language explainers, reflection prompts, and food-first inspiration.</p>
         </div>
       </div>
       <div className="flex items-center space-x-2 sm:space-x-4">

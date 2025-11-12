@@ -34,17 +34,33 @@ interface ModuleCardProps {
 const getTipContent = (moduleType: ModuleType): React.ReactNode => {
   switch (moduleType) {
     case ModuleType.Food:
-      return <p>Enter a health condition (like 'high blood pressure') to discover whole foods that may offer support. Be specific for better results!</p>;
+      return <p>Share a wellness curiosity like “support steady energy” or “learn about iron-rich foods” to see approachable research summaries.</p>;
     case ModuleType.Herbs:
-      return <p>Looking for natural remedies? Type in a condition or a body system (e.g., 'digestive health') to find relevant herbs and their benefits.</p>;
+      return <p>Type in a body system, tradition, or theme (e.g., “digestive harmony” or “calming herbs”) to explore evidence-informed field notes.</p>;
     case ModuleType.Meds:
-      return <p>List your medications, supplements, and OTC drugs to understand how they work, check for interactions, and get warnings based on your profile.</p>;
+      return <p>List the prescriptions, supplements, or OTC labels you are researching so HealWise can translate how they function in everyday language. No dosing advice is provided.</p>;
     case ModuleType.Recipe:
-      return <p>Need a healthy meal idea? Enter a condition ('anti-inflammatory') or an ingredient ('kale') to generate a custom juice, smoothie, or tea recipe.</p>;
+      return <p>Describe a flavor, ingredient, or vibe (like “ginger-forward refresher”) and we’ll co-create a Juice, Smoothie, or Tea idea to try.</p>;
     default:
       return '';
   }
 };
+
+const disallowedClinicalPatterns: RegExp[] = [
+  /should\s+i\s+(?:take|start|stop|use)[^?]*\?/i,
+  /can\s+i\s+(?:take|start|stop|use)[^?]*\?/i,
+  /\bwhat\s+should\s+i\s+(?:do|take)\b/i,
+  /\bdose\b/i,
+  /\bdosage\b/i,
+  /\bprescrib/i,
+  /\bdiagnos/i,
+  /\bsubstitut/i,
+  /\bthis\s+instead\s+of\b/i,
+  /\btriage\b/i,
+];
+
+const CLINICAL_REDIRECT_MESSAGE =
+  "HealWise is a learning companion. It can explain topics but cannot tell you what to take, stop, or substitute. Please rephrase as a research question or talk with a qualified professional about personal medical decisions.";
 
 
 const ModuleCard: React.FC<ModuleCardProps> = ({ id, module, plan, restrictions, onPlayVideo, onSubmission, onAddToPlanner, remainingUsage, sharedInput, setSharedInput }) => {
@@ -120,14 +136,22 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ id, module, plan, restrictions,
     const trimmedInputs = sourceInputs.map(m => m.trim()).filter(m => m);
 
     if (trimmedInputs.length === 0) {
-      setError(`Please enter at least one value in an input field.`);
+      setError(`Please enter at least one idea in the input field.`);
+      return;
+    }
+
+    const combinedInput = trimmedInputs.join(' ').toLowerCase();
+    const containsClinicalDirective = disallowedClinicalPatterns.some((pattern) => pattern.test(combinedInput));
+    if (containsClinicalDirective) {
+      setError(CLINICAL_REDIRECT_MESSAGE);
+      setResults(null);
       return;
     }
     
     if (trimmedInputs.length > remaining) {
         const overage = trimmedInputs.length - remaining;
         const period = plan === 'free' ? 'day' : 'month';
-        setError(`Submission limit exceeded. You are trying to analyze ${trimmedInputs.length} items, but you only have ${remaining} ${remaining === 1 ? 'analysis' : 'analyses'} remaining this ${period}. Please remove ${overage} item${overage > 1 ? 's' : ''} to proceed.`);
+        setError(`Learning limit reached. You are trying to explore ${trimmedInputs.length} entries, but you only have ${remaining} ${remaining === 1 ? 'session' : 'sessions'} left this ${period}. Please remove ${overage} entr${overage === 1 ? 'y' : 'ies'} to continue.`);
         return;
     }
 
@@ -180,7 +204,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ id, module, plan, restrictions,
               ))}
             </div>
             <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-4 italic">
-              Disclaimer: This information is for educational purposes and not a substitute for professional medical advice.
+              Plain-language summaries for learning only. HealWise does not diagnose, prescribe, or replace professional guidance.
             </p>
           </div>
         ) : (
@@ -205,7 +229,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ id, module, plan, restrictions,
               ))}
                {plan !== 'free' && canAddMore && (
                   <button onClick={handleAddItem} className="text-sm font-medium text-brand-green-dark hover:underline dark:text-brand-green-light" disabled={isLoading || isLimitReached}>
-                    + Add another item (up to {maxInputsForPlan})
+                    + Add another entry (up to {maxInputsForPlan})
                   </button>
                 )}
             </div>
@@ -246,10 +270,10 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ id, module, plan, restrictions,
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-          ) : isLimitReached ? 'Usage limit reached' : 'Get Recommendations'}
+          ) : isLimitReached ? 'Usage limit reached' : 'Generate Insights'}
         </button>
         <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-2">
-            Analyses remaining this {plan === 'free' ? 'day' : 'month'}: {remaining < 0 ? 0 : remaining}
+            Learning pulls remaining this {plan === 'free' ? 'day' : 'month'}: {remaining < 0 ? 0 : remaining}
         </p>
       </div>
     </div>

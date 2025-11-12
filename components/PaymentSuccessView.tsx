@@ -15,12 +15,12 @@ const PaymentSuccessView: React.FC<PaymentSuccessViewProps> = ({ plan, setActive
         <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-brand-green mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <h1 className="text-3xl font-bold text-brand-charcoal dark:text-brand-cream">Payment Successful!</h1>
+        <h1 className="text-3xl font-bold text-brand-charcoal dark:text-brand-cream">Learning Pass Activated!</h1>
         <p className="text-gray-500 dark:text-gray-400 mt-2 text-lg">
-          Welcome to the HealWise <strong className="text-brand-green-dark dark:text-brand-green-light">{planName}</strong> plan!
+          Welcome to the HealWise <strong className="text-brand-green-dark dark:text-brand-green-light">{planName}</strong> plan.
         </p>
         <p className="text-gray-500 dark:text-gray-400 mt-4">
-          You've unlocked advanced features to accelerate your wellness journey. You can now explore the dashboard with your new capabilities.
+          You now have additional learning pulls, planner powers, and recipe creativity to keep your curiosity flowing.
         </p>
         <button
           onClick={() => setActiveView('dashboard')}

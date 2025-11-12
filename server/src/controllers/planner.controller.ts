@@ -5,7 +5,7 @@ import { ModuleType } from '../types/common';
 
 const plannerItemSchema = z.object({
   moduleType: z.nativeEnum(ModuleType),
-  result: z.record(z.any()),
+  result: z.record(z.string(), z.unknown()),
   note: z.string().max(500).optional(),
 });
 

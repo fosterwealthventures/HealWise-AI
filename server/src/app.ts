@@ -12,6 +12,14 @@ app.use(cors());
 app.use(express.json());
 app.use(requestLogger);
 
+app.get('/', (_req, res) => {
+  res.json({
+    ok: true,
+    service: 'HealWise API',
+    time: new Date().toISOString(),
+  });
+});
+
 app.use('/health', healthRoutes);
 app.use('/api', apiRoutes);
 

@@ -1,5 +1,5 @@
 {
   "name": "HealWise AI Dashboard",
-  "description": "An interactive, intelligent wellness dashboard that provides recommendations for whole-foods, herbs, medications, and recipes based on user-input health conditions.",
+  "description": "A plain-language wellness learning companion that translates reputable sources into food-first explainers, planners, and recipe inspiration.",
   "requestFramePermissions": []
 }

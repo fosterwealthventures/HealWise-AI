@@ -14,11 +14,17 @@
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
+    "@stripe/stripe-js": "^8.4.0",
+    "dotenv": "^17.2.3",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.9.5",
+    "stripe": "^19.3.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^5.0.0",
     "concurrently": "^9.2.1",
     "typescript": "~5.8.2",

@@ -1,8 +1,9 @@
-import React from 'react';
-import { SubscriptionPlan } from '../types';
+'use client';
+import React, { useState } from 'react';
+import type { SubscriptionPlan } from '../types';
 
 const CheckIcon = () => (
-  <svg className="h-6 w-6 text-brand-green" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <svg className="h-6 w-6 text-brand-green" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
   </svg>
 );
@@ -16,13 +17,17 @@ const PlanCard: React.FC<{
   isFeatured?: boolean;
   onSelect: () => void;
   buttonText: string;
-}> = ({ planName, price, period, description, features, isFeatured = false, onSelect, buttonText }) => {
-  const cardClasses = isFeatured 
-    ? "bg-brand-green-dark text-white border-2 border-brand-green-dark" 
-    : "bg-white dark:bg-brand-charcoal-light text-brand-charcoal dark:text-brand-cream border border-gray-200 dark:border-gray-700";
+  isProcessing?: boolean;
+}> = ({
+  planName, price, period, description, features,
+  isFeatured = false, onSelect, buttonText, isProcessing = false
+}) => {
+  const cardClasses = isFeatured
+    ? 'bg-brand-green-dark text-white border-2 border-brand-green-dark'
+    : 'bg-white dark:bg-brand-charcoal-light text-brand-charcoal dark:text-brand-cream border border-gray-200 dark:border-gray-700';
   const buttonClasses = isFeatured
-    ? "bg-white text-brand-green-dark hover:bg-gray-100"
-    : "bg-brand-green-dark text-white hover:bg-brand-green-dark/90";
+    ? 'bg-white text-brand-green-dark hover:bg-gray-100'
+    : 'bg-brand-green-dark text-white hover:bg-brand-green-dark/90';
 
   return (
     <div className={`rounded-2xl p-8 shadow-card flex flex-col ${cardClasses}`}>
@@ -35,37 +40,71 @@ const PlanCard: React.FC<{
       <ul className="mt-8 space-y-4 flex-grow">
         {features.map((feature, i) => (
           <li key={i} className="flex items-start">
-            <div className="flex-shrink-0">
-              <CheckIcon />
-            </div>
+            <div className="flex-shrink-0"><CheckIcon /></div>
             <p className="ml-3 text-base">{feature}</p>
           </li>
         ))}
       </ul>
-      <button 
+      <button
         onClick={onSelect}
-        className={`mt-10 block w-full py-3 px-6 text-center font-semibold rounded-lg shadow-md transition-transform transform hover:scale-105 ${buttonClasses}`}
+        disabled={isProcessing}
+        aria-busy={isProcessing}
+        className={`mt-10 block w-full py-3 px-6 text-center font-semibold rounded-lg shadow-md transition-transform transform ${isProcessing ? 'opacity-60 cursor-not-allowed' : 'hover:scale-105'} ${buttonClasses}`}
       >
-        {buttonText}
+        {isProcessing ? 'Redirecting…' : buttonText}
       </button>
     </div>
   );
 };
 
+type Props = {
+  /** Optional: If you already have a parent handler, pass it in. Otherwise we’ll use built-in Stripe handler. */
+  onSelectPlan?: (plan: SubscriptionPlan) => Promise<void> | void;
+  setActiveView?: (view: string) => void;
+};
 
-const PricingPage: React.FC<{ 
-  onSelectPlan: (plan: SubscriptionPlan) => void;
-  setActiveView: (view: string) => void;
-}> = ({ onSelectPlan, setActiveView }) => {
+const PricingPage: React.FC<Props> = ({ onSelectPlan, setActiveView }) => {
+  const [processingPlan, setProcessingPlan] = useState<SubscriptionPlan | null>(null);
+
+  // Built-in Stripe handler (used when onSelectPlan not provided)
+  const startCheckout = async (plan: SubscriptionPlan) => {
+    if (plan === 'free') {
+      // Free plan – no Stripe. You can route to onboarding or set a cookie/flag here.
+      setActiveView?.('onboarding');
+      return;
+    }
+    try {
+      setProcessingPlan(plan);
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan }),
+      });
+      if (!res.ok) throw new Error('Checkout failed');
+      const data = await res.json() as { url?: string };
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No session URL returned');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Sorry, something went wrong starting checkout.');
+      setProcessingPlan(null);
+    }
+  };
+
+  const handleSelect = (plan: SubscriptionPlan) =>
+    onSelectPlan ? onSelectPlan(plan) : startCheckout(plan);
 
   return (
     <div className="animate-fade-in">
       <div className="text-center">
         <h1 className="text-4xl font-extrabold text-brand-charcoal dark:text-brand-cream sm:text-5xl">
-          Find the Perfect Plan
+          Choose Your Learning Pass
         </h1>
         <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-500 dark:text-gray-400">
-          Start your journey to holistic wellness today. Choose a plan that fits your needs.
+          All tiers focus on translating reputable wellness research into everyday language—pick how many learning pulls you need.
         </p>
       </div>
 
@@ -74,56 +113,60 @@ const PricingPage: React.FC<{
           planName="Free"
           price="$0"
           period="/forever"
-          description="A great way to get started with HealWise."
+          description="A great way to explore the learning companion."
           features={[
-            "1 shared health condition input per day",
-            "1 medication/supplement input per day",
-            "Recommendations for Food, Herbs, and Recipes from your single condition",
+            '1 shared learning topic per day',
+            '1 medication/supplement explainer per day',
+            'Food, Herb, and Recipe cards anchored to the same curiosity',
           ]}
-          onSelect={() => onSelectPlan('free')}
+          onSelect={() => handleSelect('free')}
           buttonText="Select Plan"
+          isProcessing={processingPlan === 'free'}
         />
         <PlanCard
           planName="Pro"
           price="$7.99"
           period="/month"
-          description="For those who want to dive deeper into their health. Go annual for $79 and save over 15%!"
+          description="For curious learners who want more flexibility. Go annual for $79 and save over 15%!"
           features={[
-            "Up to 50 analyses per month",
-            "Analyze multiple items per search",
-            "Use different conditions across modules",
-            "Save recommendations to planner",
+            'Up to 50 learning pulls per month',
+            'Mix and match topics across modules',
+            'Save insights to planner with personal notes',
+            'Request recipe variations on the fly',
           ]}
-          isFeatured={true}
-          onSelect={() => onSelectPlan('pro')}
+          isFeatured
+          onSelect={() => handleSelect('pro')}
           buttonText="Upgrade to Pro"
+          isProcessing={processingPlan === 'pro'}
         />
         <PlanCard
           planName="Premium"
           price="$14.99"
           period="/month"
-          description="For comprehensive health management. Go annual for $99 and save over 40%!"
+          description="For power researchers and community teams. Go annual for $99 and save over 40%!"
           features={[
-            "Everything in Pro, plus:",
-            "Up to 100 analyses per month",
-            "Personalized wellness plans (coming soon)",
-            "Early access to new features",
+            'Everything in Pro, plus:',
+            'Up to 100 learning pulls per month',
+            'Guided journaling templates (coming soon)',
+            'Priority access to new reflection tools',
           ]}
-          onSelect={() => onSelectPlan('premium')}
+          onSelect={() => handleSelect('premium')}
           buttonText="Upgrade to Premium"
+          isProcessing={processingPlan === 'premium'}
         />
       </div>
-       <p className="text-center mt-8 text-gray-500 dark:text-gray-400 text-sm">
-        Clicking 'Upgrade' will simulate a successful payment via Stripe for demo purposes.
+
+      <p className="text-center mt-8 text-gray-500 dark:text-gray-400 text-sm">
+        Paid upgrades launch Stripe Checkout in a secure window. Configure your Stripe keys in the <code>.env</code> file before testing.
       </p>
       <div className="text-center mt-4">
-        <button 
-          onClick={() => setActiveView('payment-cancel')} 
+        <button
+          onClick={() => setActiveView?.('payment-cancel')}
           className="text-sm text-gray-500 dark:text-gray-400 hover:underline"
         >
-          Simulate a canceled payment
+          View the canceled payment screen
         </button>
-       </div>
+      </div>
     </div>
   );
 };

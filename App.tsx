@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { loadStripe } from '@stripe/stripe-js';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import DashboardView from './components/DashboardView';
@@ -10,11 +11,24 @@ import ProfileView from './components/ProfileView';
 import AppFooter from './components/AppFooter';
 import PaymentSuccessView from './components/PaymentSuccessView';
 import PaymentCancelView from './components/PaymentCancelView';
+import { createCheckoutSession } from './services/paymentsService';
 import { SubscriptionPlan, PlannerItem } from './types';
+
+const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
 
 const DashboardShell: React.FC = () => {
   const [activeView, setActiveView] = useState('dashboard');
-  const [plan, setPlan] = useState<SubscriptionPlan>('free');
+  const [plan, setPlan] = useState<SubscriptionPlan>(() => {
+    if (typeof window === 'undefined') {
+      return 'free';
+    }
+    const storedPlan = localStorage.getItem('healwisePlan');
+    if (storedPlan === 'free' || storedPlan === 'pro' || storedPlan === 'premium') {
+      return storedPlan;
+    }
+    return 'free';
+  });
   const [restrictions, setRestrictions] = useState(() => localStorage.getItem('healwiseRestrictions') || '');
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [plannerItems, setPlannerItems] = useState<PlannerItem[]>(() => {
@@ -36,6 +50,7 @@ const DashboardShell: React.FC = () => {
   });
 
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [checkoutPlan, setCheckoutPlan] = useState<SubscriptionPlan | null>(null);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -61,21 +76,77 @@ const DashboardShell: React.FC = () => {
     localStorage.setItem('healwisePlannerItems', JSON.stringify(plannerItems));
   }, [plannerItems]);
 
+  useEffect(() => {
+    localStorage.setItem('healwisePlan', plan);
+  }, [plan]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const checkoutStatus = params.get('checkout');
+    const planParam = params.get('plan');
+    const paidPlan = planParam === 'pro' || planParam === 'premium' ? (planParam as SubscriptionPlan) : null;
+
+    const clearCheckoutParams = () => {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('checkout');
+      url.searchParams.delete('plan');
+      url.searchParams.delete('session_id');
+      const newSearch = url.searchParams.toString();
+      const nextUrl = `${url.pathname}${newSearch ? `?${newSearch}` : ''}${url.hash}`;
+      window.history.replaceState(null, '', nextUrl);
+    };
+
+    if (checkoutStatus === 'success' && paidPlan) {
+      setPlan(paidPlan);
+      setActiveView('payment-success');
+      clearCheckoutParams();
+    } else if (checkoutStatus === 'cancel') {
+      setActiveView('payment-cancel');
+      clearCheckoutParams();
+    }
+  }, []);
+
   const handleOnboardingComplete = () => {
     setShowOnboarding(false);
     localStorage.setItem('healwiseOnboardingComplete', 'true');
   };
 
-  const handlePlanSelect = (selectedPlan: SubscriptionPlan) => {
+  const handlePlanSelect = async (selectedPlan: SubscriptionPlan) => {
     if (selectedPlan === 'free') {
       setPlan('free');
       alert(`You are now on the Free plan!`);
       setActiveView('dashboard');
+      setCheckoutPlan(null);
+      return;
     } else {
-      // In a real app, this would initiate the Stripe checkout flow.
-      // We simulate a successful payment and redirect to our success page.
-      setPlan(selectedPlan);
-      setActiveView('payment-success');
+      if (!publishableKey || !stripePromise) {
+        alert('Stripe is not configured. Please add your publishable key to the .env file.');
+        return;
+      }
+
+      try {
+        setCheckoutPlan(selectedPlan);
+        const session = await createCheckoutSession(selectedPlan);
+        const stripe = await stripePromise;
+
+        if (!stripe) {
+          throw new Error('Stripe failed to initialize');
+        }
+
+        const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
+
+        if (error) {
+          if (session.url) {
+            window.location.href = session.url;
+            return;
+          }
+          throw error;
+        }
+      } catch (error) {
+        console.error('Stripe checkout failed', error);
+        alert('We could not start the checkout process. Please try again in a few moments.');
+        setCheckoutPlan(null);
+      }
     }
   };
 
@@ -95,7 +166,13 @@ const DashboardShell: React.FC = () => {
       case 'dashboard':
         return <DashboardView plan={plan} restrictions={restrictions} onAddToPlanner={handleAddToPlanner} setActiveView={setActiveView} />;
       case 'pricing':
-        return <PricingPage onSelectPlan={handlePlanSelect} setActiveView={setActiveView} />;
+        return (
+          <PricingPage
+            onSelectPlan={handlePlanSelect}
+            setActiveView={setActiveView}
+            processingPlan={checkoutPlan}
+          />
+        );
       case 'planner':
         return <PlannerView items={plannerItems} setItems={setPlannerItems} />;
       case 'profile':

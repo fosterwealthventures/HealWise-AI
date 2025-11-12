@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ApiResult, ModuleType, FoodResult, MedsAnalysisResult, HerbResult, RecipeResult, SubscriptionPlan, PlannerItem } from '../types';
 import { generateRecipeVariation } from '../services/geminiService';
 import { BookOpenIcon, BookmarkIcon, YoutubeIcon, WarningIcon } from './icons/ActionIcons';
+import { extractYouTubeId } from '../lib/youtube';
 
 interface ResultsCardProps {
   result: ApiResult;
@@ -11,14 +12,6 @@ interface ResultsCardProps {
   plan: SubscriptionPlan;
   onAddToPlanner: (item: Omit<PlannerItem, 'id' | 'savedAt'>) => void;
 }
-
-// Utility function to extract video ID from YouTube URL
-const getYouTubeId = (url: string): string | null => {
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-  const match = url.match(regExp);
-  return (match && match[2].length === 11) ? match[2] : null;
-};
-
 
 const DetailsDrawer: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <div className="mt-3 p-4 bg-gray-50/80 dark:bg-gray-700/50 rounded-lg border border-gray-200/60 dark:border-gray-600/60">
@@ -176,13 +169,13 @@ const RecipeCard: React.FC<{
 
 const MedsAnalysisCard: React.FC<{ item: MedsAnalysisResult }> = ({ item }) => (
     <div>
-        <h4 className="font-bold text-amber-600 dark:text-amber-400 text-lg mb-4">Medication Analysis</h4>
+        <h4 className="font-bold text-amber-600 dark:text-amber-400 text-lg mb-4">Medication Decoder</h4>
 
         {item.allergyWarnings && item.allergyWarnings.length > 0 && (
             <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/50 border border-amber-200 dark:border-amber-800/60 rounded-lg">
                 <h5 className="font-semibold text-amber-800 dark:text-amber-300 flex items-center mb-3">
                     <WarningIcon />
-                    <span className="ml-2">Potential Ingredient & Allergy Warnings</span>
+                    <span className="ml-2">Ingredient &amp; Allergy Flags</span>
                 </h5>
                 <div className="space-y-3">
                     {item.allergyWarnings.map((warning, i) => (
@@ -196,14 +189,14 @@ const MedsAnalysisCard: React.FC<{ item: MedsAnalysisResult }> = ({ item }) => (
         )}
 
         <div className="mb-6">
-            <h5 className="font-semibold text-brand-charcoal dark:text-brand-cream mb-3 border-b dark:border-gray-700 pb-2">Individual Medications</h5>
+            <h5 className="font-semibold text-brand-charcoal dark:text-brand-cream mb-3 border-b dark:border-gray-700 pb-2">Individual Labels</h5>
             <div className="space-y-4">
                 {item.individualMedications.map((med, i) => (
                     <div key={i} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                         <p className="font-semibold text-brand-charcoal dark:text-brand-cream">{med.name}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1"><strong className="text-gray-700 dark:text-gray-200">How it works:</strong> {med.howItWorks}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1"><strong className="text-gray-700 dark:text-gray-200">How it works (learning summary):</strong> {med.howItWorks}</p>
                         <div className="mt-2">
-                            <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">Common Side Effects:</p>
+                            <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">Commonly Noted Effects:</p>
                             <ul className="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 pl-2">
                                 {med.commonSideEffects.map((effect, j) => <li key={j}>{effect}</li>)}
                             </ul>
@@ -214,7 +207,7 @@ const MedsAnalysisCard: React.FC<{ item: MedsAnalysisResult }> = ({ item }) => (
         </div>
 
         <div>
-            <h5 className="font-semibold text-brand-charcoal dark:text-brand-cream mb-3 border-b dark:border-gray-700 pb-2">Interaction Analysis</h5>
+            <h5 className="font-semibold text-brand-charcoal dark:text-brand-cream mb-3 border-b dark:border-gray-700 pb-2">Ingredient &amp; Interaction Notes</h5>
             {item.interactionAnalysis && item.interactionAnalysis.length > 0 ? (
                 <div className="space-y-4">
                     {item.interactionAnalysis.map((interaction, i) => (
@@ -226,7 +219,7 @@ const MedsAnalysisCard: React.FC<{ item: MedsAnalysisResult }> = ({ item }) => (
                     ))}
                 </div>
             ) : (
-                <p className="text-sm text-gray-600 dark:text-gray-300 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">No significant interactions were found between the specified medications based on available data.</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">No notable overlaps surfaced in this educational review of the items you listed.</p>
             )}
         </div>
     </div>
@@ -285,18 +278,31 @@ const ResultsCard: React.FC<ResultsCardProps> = ({ result, moduleType, restricti
       }
       case ModuleType.Herbs: {
         const item = result as HerbResult;
-        const videoId = item.youtubeLink ? getYouTubeId(item.youtubeLink) : null;
+        const videoId = extractYouTubeId(item.youtubeLink);
+        const canEmbed = Boolean(videoId);
         return (
           <>
             <h4 className="font-bold text-brand-green-dark dark:text-brand-green-light">{item.name}</h4>
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">{item.benefits}</p>
-            {videoId && (
+            {item.youtubeLink && (
+              canEmbed ? (
               <button 
                 onClick={() => onPlayVideo(videoId)} 
                 className="mt-2 inline-flex items-center text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
               >
                   <YoutubeIcon /> Watch on YouTube
               </button>
+              ) : (
+                <a
+                  href={item.youtubeLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex items-center text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                  title="Opens in YouTube (embedding disabled)"
+                >
+                  <YoutubeIcon /> Watch on YouTube
+                </a>
+              )
             )}
             {showDetails && <DetailsDrawer>
                  <p className="text-xs text-gray-600 dark:text-gray-300 italic">Citation: {item.studyCitation}</p>

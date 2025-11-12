@@ -51,19 +51,19 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete, restricti
               </svg>
             </div>
             <h2 className="text-2xl font-bold text-brand-charcoal dark:text-brand-cream mt-5">Welcome to HealWise!</h2>
-            <p className="text-gray-500 dark:text-gray-400 mt-2 max-w-sm mx-auto">Your journey to holistic, food-first, and faith-friendly wellness starts here.</p>
+            <p className="text-gray-500 dark:text-gray-400 mt-2 max-w-sm mx-auto">Your plain-language wellness learning companion lives here—faith-friendly, food-first, and curiosity driven.</p>
           </div>
         );
       case 3:
         return (
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-brand-charcoal dark:text-brand-cream">Discover Our Core Features</h2>
-            <p className="text-gray-500 dark:text-gray-400 mt-2 mb-6">Get AI-powered recommendations tailored to you.</p>
+            <h2 className="text-2xl font-bold text-brand-charcoal dark:text-brand-cream">Discover Our Core Learning Spaces</h2>
+            <p className="text-gray-500 dark:text-gray-400 mt-2 mb-6">Get AI-powered study cards that translate trusted sources into everyday language.</p>
             <div className="space-y-4">
-                <FeatureCard icon={<AppleIcon />} title="Whole-Foods" description="Find foods that support your health goals." />
-                <FeatureCard icon={<LeafIcon />} title="Herbs" description="Explore natural herbs and their benefits." />
-                <FeatureCard icon={<PillIcon />} title="Medications" description="Simplify your meds and check interactions." />
-                <FeatureCard icon={<BlenderIcon />} title="Recipes" description="Generate healthy recipes for your needs." />
+                <FeatureCard icon={<AppleIcon />} title="Whole-Food Explorer" description="See how everyday foods are discussed in reputable studies." />
+                <FeatureCard icon={<LeafIcon />} title="Herbal Field Notes" description="Learn about botanicals through annotated citations and videos." />
+                <FeatureCard icon={<PillIcon />} title="Medication Decoder" description="Translate labels into plain English—no dosing or prescribing." />
+                <FeatureCard icon={<BlenderIcon />} title="Recipe Idea Lab" description="Generate Juice, Smoothie, and Tea inspiration for your focus." />
             </div>
           </div>
         );
@@ -74,15 +74,15 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete, restricti
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </div>
                 <h2 className="text-2xl font-bold text-brand-charcoal dark:text-brand-cream mt-5">How It Works</h2>
-                <p className="text-gray-500 dark:text-gray-400 mt-2 mb-6">Start with our free plan or upgrade for more features.</p>
+                <p className="text-gray-500 dark:text-gray-400 mt-2 mb-6">Start with our free plan or upgrade for more learning pulls.</p>
                 <div className="space-y-4 text-left">
                     <div className="p-4 bg-gray-50 dark:bg-brand-charcoal rounded-lg border dark:border-gray-700">
                         <h4 className="font-semibold text-brand-charcoal dark:text-brand-cream">Free Plan</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Perfect for getting started. You get 1 shared condition and 1 medication analysis per day.</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">Perfect for sampling. Enjoy one shared learning topic plus one medication explainer per day.</p>
                     </div>
                     <div className="p-4 bg-gray-50 dark:bg-brand-charcoal rounded-lg border dark:border-gray-700">
-                        <h4 className="font-semibold text-brand-charcoal dark:text-brand-cream">Pro & Premium</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Unlock more power with monthly analyses, multi-item searches, and the ability to save to your planner.</p>
+                        <h4 className="font-semibold text-brand-charcoal dark:text-brand-cream">Pro &amp; Premium</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">Unlock more monthly learning pulls, multi-topic searches, and advanced planner tools.</p>
                     </div>
                 </div>
           </div>
@@ -94,12 +94,12 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete, restricti
                 <AllergyIcon />
              </div>
             <h2 className="text-2xl font-bold text-brand-charcoal dark:text-brand-cream mt-5">Personalize Your Experience</h2>
-            <p className="text-gray-500 dark:text-gray-400 mt-2 mb-6">Let us know about any dietary restrictions or allergies to tailor your recommendations. You can change this later.</p>
+            <p className="text-gray-500 dark:text-gray-400 mt-2 mb-6">Share ingredient preferences or avoid lists so our learning prompts stay aligned with your pantry. You can change this later.</p>
             <input
               type="text"
               value={restrictions}
               onChange={(e) => setRestrictions(e.target.value)}
-              placeholder="e.g., Allergic to peanuts, gluten-free"
+              placeholder="e.g., Prefer dairy-free swaps, limit caffeine after noon"
               className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-brand-charcoal dark:text-brand-cream rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent outline-none transition"
               autoFocus
             />

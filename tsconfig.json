@@ -21,6 +21,6 @@
     "types": ["vite/client", "node"],
     "resolveJsonModule": true
   },
-  "include": ["src", "components", "types", "vite.config.ts", "env.d.ts"],
+  "include": ["src", "components", "types", "lib", "vite.config.ts", "env.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

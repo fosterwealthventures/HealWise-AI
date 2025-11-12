@@ -8,9 +8,9 @@ import FeedbackButton from './FeedbackButton';
 const modules = [
   {
     type: ModuleType.Food,
-    title: 'Whole-Food Recommender',
+    title: 'Whole-Food Explorer',
     icon: <AppleIcon />,
-    placeholder: 'Enter a health condition...',
+    placeholder: 'Enter a wellness focus, goal, or curiosity...',
     color: 'green',
     colorClasses: {
       button: 'bg-brand-green-dark hover:bg-brand-green-dark/90 focus:ring-brand-green',
@@ -21,9 +21,9 @@ const modules = [
   },
   {
     type: ModuleType.Herbs,
-    title: 'Herbal Recommender',
+    title: 'Herbal Field Notes',
     icon: <LeafIcon />,
-    placeholder: 'Enter a condition or body system...',
+    placeholder: 'Enter a body system, tradition, or curiosity...',
     color: 'green',
     colorClasses: {
       button: 'bg-brand-green-dark hover:bg-brand-green-dark/90 focus:ring-brand-green',
@@ -34,9 +34,9 @@ const modules = [
   },
   {
     type: ModuleType.Meds,
-    title: 'Medication Simplifier',
+    title: 'Medication Decoder',
     icon: <PillIcon />,
-    placeholder: 'Enter meds, supplements, OTCs...',
+    placeholder: 'List items from a label you want explained...',
     color: 'gold',
     colorClasses: {
       button: 'bg-brand-gold hover:bg-brand-gold/90 focus:ring-amber-500',
@@ -47,9 +47,9 @@ const modules = [
   },
   {
     type: ModuleType.Recipe,
-    title: 'Recipe Generator',
+    title: 'Recipe Idea Lab',
     icon: <BlenderIcon />,
-    placeholder: 'Enter a condition or ingredient...',
+    placeholder: 'Describe an ingredient, vibe, or focus...',
     color: 'gold',
     colorClasses: {
       button: 'bg-brand-gold hover:bg-brand-gold/90 focus:ring-amber-500',
@@ -113,13 +113,13 @@ const RestrictionsDisplay: React.FC<{ restrictions: string; onEdit: () => void; 
     <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
       <h3 className="text-lg font-bold text-brand-charcoal dark:text-brand-cream flex items-center">
         <AllergyIcon />
-        <span className="ml-3">Dietary Restrictions</span>
+        <span className="ml-3">Ingredient Preferences &amp; Avoid List</span>
       </h3>
       <button 
         onClick={onEdit}
         className="px-4 py-2 text-sm font-semibold text-brand-green-dark bg-brand-green/10 hover:bg-brand-green/20 dark:text-brand-green-light dark:bg-brand-green/20 dark:hover:bg-brand-green/30 rounded-lg transition-colors flex-shrink-0"
       >
-        {restrictions ? 'Edit in Profile' : 'Add in Profile'}
+        {restrictions ? 'Update in Profile' : 'Add in Profile'}
       </button>
     </div>
     <div className="mt-3 pt-3 border-t border-gray-200/60 dark:border-gray-700/60">
@@ -129,7 +129,7 @@ const RestrictionsDisplay: React.FC<{ restrictions: string; onEdit: () => void; 
         </p>
       ) : (
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          No restrictions set. Add your allergies or dietary needs in your profile for safer, personalized recommendations.
+          Use your profile to jot down ingredients you skip or prefer so our explainers stay aligned with your pantry.
         </p>
       )}
     </div>
@@ -210,9 +210,9 @@ const DashboardView: React.FC<{
   };
 
   const quickAccessButtons = [
-    { type: ModuleType.Food, label: 'Food Recommender', icon: <AppleIcon />, id: `module-${ModuleType.Food}` },
-    { type: ModuleType.Herbs, label: 'Herbal Recommender', icon: <LeafIcon />, id: `module-${ModuleType.Herbs}` },
-    { type: ModuleType.Recipe, label: 'Recipe Generator', icon: <BlenderIcon />, id: `module-${ModuleType.Recipe}` },
+    { type: ModuleType.Food, label: 'Whole-Food Explorer', icon: <AppleIcon />, id: `module-${ModuleType.Food}` },
+    { type: ModuleType.Herbs, label: 'Herbal Field Notes', icon: <LeafIcon />, id: `module-${ModuleType.Herbs}` },
+    { type: ModuleType.Recipe, label: 'Recipe Idea Lab', icon: <BlenderIcon />, id: `module-${ModuleType.Recipe}` },
   ];
 
   return (
