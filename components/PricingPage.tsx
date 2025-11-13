@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import type { SubscriptionPlan } from '../types';
+import { startCheckout, CheckoutPlanKey } from '../services/checkoutService';
 
 const CheckIcon = () => (
   <svg className="h-6 w-6 text-brand-green" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -58,44 +59,23 @@ const PlanCard: React.FC<{
 };
 
 type Props = {
-  /** Optional: If you already have a parent handler, pass it in. Otherwise we’ll use built-in Stripe handler. */
-  onSelectPlan?: (plan: SubscriptionPlan) => Promise<void> | void;
-  setActiveView?: (view: string) => void;
+  onSelectFreePlan: () => void;
+  setActiveView: (view: string) => void;
 };
 
-const PricingPage: React.FC<Props> = ({ onSelectPlan, setActiveView }) => {
-  const [processingPlan, setProcessingPlan] = useState<SubscriptionPlan | null>(null);
+const PricingPage: React.FC<Props> = ({ onSelectFreePlan, setActiveView }) => {
+  const [processingPlan, setProcessingPlan] = useState<CheckoutPlanKey | null>(null);
 
-  // Built-in Stripe handler (used when onSelectPlan not provided)
-  const startCheckout = async (plan: SubscriptionPlan) => {
-    if (plan === 'free') {
-      // Free plan – no Stripe. You can route to onboarding or set a cookie/flag here.
-      setActiveView?.('onboarding');
-      return;
-    }
+  const handleCheckout = async (planKey: CheckoutPlanKey) => {
     try {
-      setProcessingPlan(plan);
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan }),
-      });
-      if (!res.ok) throw new Error('Checkout failed');
-      const data = await res.json() as { url?: string };
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('No session URL returned');
-      }
-    } catch (e) {
-      console.error(e);
-      alert('Sorry, something went wrong starting checkout.');
+      setProcessingPlan(planKey);
+      await startCheckout(planKey);
+    } catch (error) {
+      console.error('Stripe checkout failed', error);
+      alert('We could not start the checkout process. Please try again.');
       setProcessingPlan(null);
     }
   };
-
-  const handleSelect = (plan: SubscriptionPlan) =>
-    onSelectPlan ? onSelectPlan(plan) : startCheckout(plan);
 
   return (
     <div className="animate-fade-in">
@@ -119,9 +99,9 @@ const PricingPage: React.FC<Props> = ({ onSelectPlan, setActiveView }) => {
             '1 medication/supplement explainer per day',
             'Food, Herb, and Recipe cards anchored to the same curiosity',
           ]}
-          onSelect={() => handleSelect('free')}
+          onSelect={onSelectFreePlan}
           buttonText="Select Plan"
-          isProcessing={processingPlan === 'free'}
+          isProcessing={false}
         />
         <PlanCard
           planName="Pro"
@@ -135,9 +115,9 @@ const PricingPage: React.FC<Props> = ({ onSelectPlan, setActiveView }) => {
             'Request recipe variations on the fly',
           ]}
           isFeatured
-          onSelect={() => handleSelect('pro')}
+          onSelect={() => { void handleCheckout('pro_month'); }}
           buttonText="Upgrade to Pro"
-          isProcessing={processingPlan === 'pro'}
+          isProcessing={processingPlan === 'pro_month'}
         />
         <PlanCard
           planName="Premium"
@@ -150,9 +130,9 @@ const PricingPage: React.FC<Props> = ({ onSelectPlan, setActiveView }) => {
             'Guided journaling templates (coming soon)',
             'Priority access to new reflection tools',
           ]}
-          onSelect={() => handleSelect('premium')}
+          onSelect={() => { void handleCheckout('premium_month'); }}
           buttonText="Upgrade to Premium"
-          isProcessing={processingPlan === 'premium'}
+          isProcessing={processingPlan === 'premium_month'}
         />
       </div>
 
@@ -161,7 +141,7 @@ const PricingPage: React.FC<Props> = ({ onSelectPlan, setActiveView }) => {
       </p>
       <div className="text-center mt-4">
         <button
-          onClick={() => setActiveView?.('payment-cancel')}
+          onClick={() => setActiveView('payment-cancel')}
           className="text-sm text-gray-500 dark:text-gray-400 hover:underline"
         >
           View the canceled payment screen

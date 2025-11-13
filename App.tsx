@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { loadStripe } from '@stripe/stripe-js';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import DashboardView from './components/DashboardView';
@@ -11,11 +10,7 @@ import ProfileView from './components/ProfileView';
 import AppFooter from './components/AppFooter';
 import PaymentSuccessView from './components/PaymentSuccessView';
 import PaymentCancelView from './components/PaymentCancelView';
-import { createCheckoutSession } from './services/paymentsService';
 import { SubscriptionPlan, PlannerItem } from './types';
-
-const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
 
 const DashboardShell: React.FC = () => {
   const [activeView, setActiveView] = useState('dashboard');
@@ -50,8 +45,6 @@ const DashboardShell: React.FC = () => {
   });
 
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [checkoutPlan, setCheckoutPlan] = useState<SubscriptionPlan | null>(null);
-
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -116,37 +109,7 @@ const DashboardShell: React.FC = () => {
       setPlan('free');
       alert(`You are now on the Free plan!`);
       setActiveView('dashboard');
-      setCheckoutPlan(null);
       return;
-    } else {
-      if (!publishableKey || !stripePromise) {
-        alert('Stripe is not configured. Please add your publishable key to the .env file.');
-        return;
-      }
-
-      try {
-        setCheckoutPlan(selectedPlan);
-        const session = await createCheckoutSession(selectedPlan);
-        const stripe = await stripePromise;
-
-        if (!stripe) {
-          throw new Error('Stripe failed to initialize');
-        }
-
-        const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
-
-        if (error) {
-          if (session.url) {
-            window.location.href = session.url;
-            return;
-          }
-          throw error;
-        }
-      } catch (error) {
-        console.error('Stripe checkout failed', error);
-        alert('We could not start the checkout process. Please try again in a few moments.');
-        setCheckoutPlan(null);
-      }
     }
   };
 
@@ -168,9 +131,8 @@ const DashboardShell: React.FC = () => {
       case 'pricing':
         return (
           <PricingPage
-            onSelectPlan={handlePlanSelect}
+            onSelectFreePlan={() => handlePlanSelect('free')}
             setActiveView={setActiveView}
-            processingPlan={checkoutPlan}
           />
         );
       case 'planner':
