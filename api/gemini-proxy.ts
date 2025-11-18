@@ -1,5 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { ModuleType } from '../types';
+
+// Re-declare ModuleType locally instead of importing from TS-only
+// client types to avoid runtime module resolution issues in Vercel
+// serverless functions.
+enum ModuleType {
+  Food = 'Food',
+  Herbs = 'Herbs',
+  Meds = 'Meds',
+  Recipe = 'Recipe',
+}
 
 type RecipeType = 'Juice' | 'Smoothie' | 'Tea';
 
