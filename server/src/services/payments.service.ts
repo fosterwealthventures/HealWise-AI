@@ -72,3 +72,42 @@ export const createCheckoutSession = async (planKey: CheckoutPlanKey) => {
     throw new HttpError(500, 'Unknown Stripe error');
   }
 };
+
+export const createBillingPortalSession = async (email: string) => {
+  if (!stripe) {
+    throw new HttpError(500, 'Stripe secret key is not configured');
+  }
+
+  if (!email) {
+    throw new HttpError(400, 'Email is required to manage a subscription');
+  }
+
+  try {
+    const customers = await stripe.customers.list({ email, limit: 1 });
+    const existingCustomer = customers.data[0];
+
+    const customer =
+      existingCustomer ??
+      (await stripe.customers.create({
+        email,
+      }));
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: customer.id,
+      return_url: `${env.CLIENT_URL}/healwise/dashboard`,
+    });
+
+    logger.info('Stripe billing portal session created', { customerId: customer.id, sessionId: session.id });
+
+    return session;
+  } catch (error) {
+    logger.error('Failed to create Stripe billing portal session', {
+      email,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    if (error instanceof Error) {
+      throw new HttpError(500, error.message);
+    }
+    throw new HttpError(500, 'Unknown Stripe error');
+  }
+};

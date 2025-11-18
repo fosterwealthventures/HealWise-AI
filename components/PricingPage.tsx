@@ -102,6 +102,7 @@ const PricingPage: React.FC<Props> = ({ onSelectFreePlan, setActiveView }) => {
     }
   };
 
+
   return (
     <div className="animate-fade-in">
       <div className="text-center">

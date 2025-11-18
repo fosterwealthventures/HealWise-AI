@@ -4,16 +4,18 @@ import HealWiseLogo from '../src/assets/HealWise_logo.png';
 const Logo = () => (
   <div className="flex flex-col px-4">
     <div className="flex items-center space-x-3">
-      <div className="bg-brand-green p-2 rounded-lg">
-        <img
-          src={HealWiseLogo}
-          alt="HealWise AI logo"
-          className="h-8 w-8 rounded-md object-contain"
-        />
-      </div>
-      <span className="text-2xl font-bold text-brand-green-dark dark:text-brand-cream tracking-tight">HealWise AI</span>
+      <img
+        src={HealWiseLogo}
+        alt="HealWise AI logo"
+        className="h-10 w-10 md:h-12 md:w-12 object-contain"
+      />
+      <span className="text-2xl font-bold text-brand-green-dark dark:text-brand-cream tracking-tight">
+        HealWise AI
+      </span>
     </div>
-    <span className="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5 ml-1 tracking-wider font-medium uppercase">a Foster Wealth Ventures creation</span>
+    <span className="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5 ml-1 tracking-wider font-medium uppercase">
+      a Foster Wealth Ventures creation
+    </span>
   </div>
 );
 

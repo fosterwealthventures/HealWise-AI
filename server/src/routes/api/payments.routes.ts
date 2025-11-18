@@ -1,8 +1,9 @@
 import { Router } from 'express';
-import { createCheckoutSessionHandler } from '../../controllers/payments.controller';
+import { createBillingPortalSessionHandler, createCheckoutSessionHandler } from '../../controllers/payments.controller';
 
 const router = Router();
 
 router.post('/checkout-session', createCheckoutSessionHandler);
+router.post('/portal-session', createBillingPortalSessionHandler);
 
 export default router;
