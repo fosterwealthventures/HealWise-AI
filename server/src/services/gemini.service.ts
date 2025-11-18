@@ -7,6 +7,7 @@ interface BaseRecommendationPayload {
   input: string;
   restrictions?: string;
   recipeType?: RecipeType;
+  previousFoods?: string[];
 }
 
 interface RecipeResult {
@@ -21,6 +22,10 @@ interface RecipeVariationPayload {
   originalRecipe: RecipeResult;
   variationRequest: string;
   restrictions?: string;
+}
+
+interface KidsExplainPayload {
+  content: string;
 }
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash';
@@ -235,26 +240,67 @@ const recipeSchema = {
   additionalProperties: false,
 };
 
+const kidsExplainSchema = {
+  type: 'object',
+  properties: {
+    simplified: { type: 'string' },
+  },
+  required: ['simplified'],
+  additionalProperties: false,
+};
+
 export const generateRecommendations = async (payload: BaseRecommendationPayload) => {
-  const { moduleType, input, restrictions, recipeType } = payload;
+  const { moduleType, input, restrictions, recipeType, previousFoods } = payload;
   const clause = getRestrictionClause(restrictions);
 
   switch (moduleType) {
     case ModuleType.Food: {
-      const prompt = `A learner is curious about the wellness focus "${input}". Suggest 3 diverse whole foods (e.g., fruit, vegetable, grain, legume) that are often discussed in reputable nutrition sources related to that focus. For each food, provide a short educational description, a simplified summary of a relevant study or evidence source, and a stewardship or mindful-living note. Do not offer prescriptions, dosages, or individualized medical advice.${clause}`;
+      const avoidClause =
+        previousFoods && previousFoods.length
+          ? ` Avoid repeating foods that have already been suggested for this learner, especially: ${previousFoods.join(
+              ', ',
+            )}.`
+          : '';
+
+      const prompt = `A learner is curious about the wellness focus or condition "${input}". Suggest 3 diverse true whole foods that someone might find in a grocery store that are often discussed in reputable nutrition sources related to that focus.
+
+1. Always provide a mix of categories across the three suggestions. Aim for:
+   - at least one colorful vegetable or root (for example, leafy greens, broccoli, sweet potatoes, carrots),
+   - at least one food rich in protein or hearty calories (for example, beans, lentils, nuts or seeds, eggs, fish, or minimally processed meats—only include animal foods if the learner's preferences do not clearly avoid them),
+   - and at least one additional everyday whole food that rounds out the ideas (such as fruit, whole grains, or seeds).
+2. Avoid repeating the same specific food name for many different themes. Only suggest commonly overused examples like quinoa or salmon if they are especially relevant to this particular focus.
+3. Do not include herbs, herbal supplements, spices, teas, capsules, extracts, or powders as standalone items.
+4. For each food, the JSON fields must be used as follows:
+   - "description": briefly describe the food and, in plain language, *why it is often discussed* for the learner's focus "${input}" (for example, which nutrients it contains or which body systems it relates to). This should sound like educational commentary someone might read on a reputable nutrition site—not a personal instruction.
+   - "studySummary": give a very short summary of a study or evidence source that explores this food in relation to the theme. Keep it cautious and avoid strong claims.
+   - "stewardshipNote": offer a gentle reflection on budgeting, sustainability, or mindful use (for example, how someone might think about including this food when talking with a professional or planning meals), without telling the learner exactly what to do.
+5. Do not offer prescriptions, dosages, or individualized medical advice, and do not tell the learner what they personally should eat, avoid, or change. Every suggested food must respect the learner's stated ingredient preferences and avoid-list first.${avoidClause}${clause}`;
       return fetchWithSchema(prompt, foodSchema);
     }
     case ModuleType.Herbs: {
-      const prompt = `A learner wants plain-language field notes about the theme "${input}". Highlight 3 herbs that are commonly referenced when exploring that theme. For each herb, explain its traditional or researched context in simple language, cite a reputable study or source, and include a YouTube link from 'The Herbal Code 411' channel if a relevant video exists. Keep the tone educational and avoid medical directives.${clause}`;
+      const prompt = `A learner wants plain-language field notes about the theme "${input}". Highlight 3 herbs that are commonly referenced when exploring that theme.
+
+For each herb:
+1. Explain what it is and the tradition or research context it is usually discussed in.
+2. In everyday language, describe why this herb is often mentioned for the learner's theme "${input}" (for example, which body systems or patterns it relates to in educational sources), without telling the learner what they personally should take or change.
+3. Cite a reputable study or source.
+4. Include a YouTube link from 'The Herbal Code 411' channel if a relevant video exists.
+
+Keep the tone educational and avoid medical directives, dosing, or substitution advice.${clause}`;
       return fetchWithSchema(prompt, herbSchema);
     }
     case ModuleType.Meds: {
       const prompt = `Provide an educational, plain-language decoder for the following list of medications, supplements, or OTC items: "${input}".
-1. For each item, explain what it is, offer a simple description of how it is commonly understood to work, and list commonly noted effects or considerations. Avoid prescribing, dosing guidance, or individualized advice.
-2. Summarize any notable interactions discussed in reputable sources. If none are noteworthy, keep the "interactionAnalysis" array empty.
-3. Highlight potential inactive-ingredient flags (like lactose, gluten, dyes, peanut oil) that could conflict with the learner's stated preferences: "${restrictions ?? 'none'}". If there are no conflicts, leave 'allergyWarnings' empty.
-Clearly label that every section is for learning only, not a medical directive.${clause}`;
-      return fetchWithSchema(prompt, medsSchema);
+1. For each item, explain what it is and give a calm, everyday-language summary of how it affects the body (for example, which systems or pathways it generally influences and what that means in daily life). Keep this at the level of \"how it works in the body\" for learning—not at the level of dosing instructions or what someone personally should do.
+2. List commonly noted effects or considerations that people might read about on reputable health sites or medication guides. Do not tell the learner what to start, stop, change, or substitute.
+3. Summarize any notable interactions discussed in reputable sources. If none are noteworthy, keep the "interactionAnalysis" array empty.
+4. Highlight potential inactive-ingredient flags (like lactose, gluten, dyes, peanut oil) that could conflict with the learner's stated preferences: "${restrictions ?? 'none'}". If there are no conflicts, leave 'allergyWarnings' empty.
+Make sure every section is clearly framed as educational context only and never as a prescription, diagnosis, dosing, or medical directive.${clause}`;
+      const result = await fetchWithSchema<unknown>(prompt, medsSchema);
+      if (Array.isArray(result)) {
+        return result;
+      }
+      return [result];
     }
     case ModuleType.Recipe: {
       const recipePrompt = `Generate a ${recipeType ?? 'Juice'} recipe inspired by the learner's prompt "${input}". Keep the tone experimental and educational—share a recipe name, description, ingredient list, and step-by-step instructions so the learner can reflect on the idea. Avoid health claims or prescriptive outcomes. The 'recipeType' field in the JSON output must remain "${recipeType ?? 'Juice'}".${clause}`;
@@ -288,4 +334,10 @@ ${clause}`;
   const result = await fetchWithSchema<RecipeResult>(prompt, recipeSchema);
   result.recipeType = originalRecipe.recipeType;
   return result;
+};
+
+export const explainForKids = async ({ content }: KidsExplainPayload) => {
+  const prompt = `Rewrite the following explanation in warm, plain language suitable for a curious older child or young teen (around ages 10–14). Keep it accurate and non-scary, avoid medical commands or dosing advice, and focus on helping them understand the big idea in a calm, hopeful way.\n\nOriginal explanation:\n"${content}"`;
+
+  return fetchWithSchema<{ simplified: string }>(prompt, kidsExplainSchema);
 };

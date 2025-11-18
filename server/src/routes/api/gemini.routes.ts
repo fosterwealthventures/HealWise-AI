@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { ModuleType } from '../../types/common';
-import { generateRecommendations, generateRecipeVariation } from '../../services/gemini.service';
+import { generateRecommendations, generateRecipeVariation, explainForKids } from '../../services/gemini.service';
 
 const router = Router();
 
@@ -11,6 +11,7 @@ const recommendationSchema = z.object({
   input: z.string().min(1, 'Input is required'),
   restrictions: z.string().optional(),
   recipeType: z.enum(['Juice', 'Smoothie', 'Tea']).optional(),
+  previousFoods: z.array(z.string()).optional(),
 });
 
 const recipeSchema = z.object({
@@ -28,11 +29,23 @@ const variationSchema = z.object({
   restrictions: z.string().optional(),
 });
 
+const kidsExplainSchema = z.object({
+  operation: z.literal('kids-explain'),
+  moduleType: z.nativeEnum(ModuleType),
+  content: z.string().min(1, 'Content is required'),
+});
+
 router.post('/generate', async (req, res) => {
   try {
     if (req.body?.operation === 'recipe-variation') {
       const payload = variationSchema.parse(req.body);
       const data = await generateRecipeVariation(payload);
+      return res.json(data);
+    }
+
+    if (req.body?.operation === 'kids-explain') {
+      const payload = kidsExplainSchema.parse(req.body);
+      const data = await explainForKids({ content: payload.content });
       return res.json(data);
     }
 

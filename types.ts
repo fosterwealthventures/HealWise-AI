@@ -56,4 +56,5 @@ export interface PlannerItem {
   moduleType: ModuleType;
   result: ApiResult;
   note: string;
+  gratitudeNote?: string;
 }

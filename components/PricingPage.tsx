@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import { useUser } from '@clerk/clerk-react';
 import type { SubscriptionPlan } from '../types';
 import { startCheckout, CheckoutPlanKey } from '../services/checkoutService';
 
@@ -65,9 +66,14 @@ type Props = {
 
 const PricingPage: React.FC<Props> = ({ onSelectFreePlan, setActiveView }) => {
   const [processingPlan, setProcessingPlan] = useState<CheckoutPlanKey | null>(null);
+  const { isSignedIn } = useUser();
 
   const handleCheckout = async (planKey: CheckoutPlanKey) => {
     try {
+      if (!isSignedIn) {
+        window.location.href = '/healwise/sign-in';
+        return;
+      }
       setProcessingPlan(planKey);
       await startCheckout(planKey);
     } catch (error) {

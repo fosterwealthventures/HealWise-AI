@@ -1,4 +1,5 @@
 import React from 'react';
+import { useUser } from '@clerk/clerk-react';
 import { SubscriptionPlan } from '../types';
 
 const SunIcon = () => (
@@ -39,6 +40,26 @@ const Header: React.FC<{
     setActiveView: (view: string) => void;
     toggleMobileSidebar: () => void; 
 }> = ({ currentPlan, setPlan, isDarkMode, toggleDarkMode, setActiveView, toggleMobileSidebar }) => {
+  const { isSignedIn } = useUser();
+
+  const handlePlanChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const nextPlan = event.target.value as SubscriptionPlan;
+
+    if (nextPlan === 'free') {
+      setPlan('free');
+      return;
+    }
+
+    // For Pro/Premium, send users to pricing instead of changing plan directly
+    if (!isSignedIn) {
+      alert('To explore Pro and Premium options, please sign in first.');
+      window.location.href = '/healwise/sign-in';
+      return;
+    }
+
+    setActiveView('pricing');
+  };
+
   return (
     <header className="h-24 bg-brand-cream/80 backdrop-blur-sm dark:bg-brand-charcoal/80 flex-shrink-0 flex items-center justify-between px-4 lg:px-10 border-b border-gray-200/80 dark:border-gray-700/60">
       <div className="flex items-center gap-4">
@@ -59,7 +80,7 @@ const Header: React.FC<{
         <div className="relative">
           <select 
             value={currentPlan} 
-            onChange={(e) => setPlan(e.target.value as SubscriptionPlan)}
+            onChange={handlePlanChange}
             className="appearance-none rounded-lg bg-white/80 dark:bg-brand-charcoal-light/80 border border-gray-200/80 dark:border-gray-700/60 px-4 py-2 text-sm font-medium text-brand-charcoal dark:text-brand-cream focus:outline-none focus:ring-2 focus:ring-brand-green"
             aria-label="Select subscription plan"
           >

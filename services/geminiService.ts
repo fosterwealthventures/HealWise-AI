@@ -12,12 +12,17 @@ interface RecommendationPayload {
   input: string;
   restrictions: string;
   recipeType?: 'Juice' | 'Smoothie' | 'Tea';
+  previousFoods?: string[];
 }
 
 interface RecipeVariationPayload {
   originalRecipe: RecipeResult;
   variationRequest: string;
   restrictions: string;
+}
+
+interface KidsExplainResponse {
+  simplified: string;
 }
 
 async function postToGemini<T>(body: Record<string, unknown>): Promise<T> {
@@ -39,9 +44,10 @@ export async function generateRecommendation<T extends RecommendationResponse>(
   moduleType: ModuleType,
   input: string,
   restrictions: string,
-  recipeType?: 'Juice' | 'Smoothie' | 'Tea'
+  recipeType?: 'Juice' | 'Smoothie' | 'Tea',
+  previousFoods?: string[],
 ): Promise<T> {
-  const payload: Record<string, unknown> = {
+  const payload: RecommendationPayload = {
     operation: 'recommendation',
     moduleType,
     input,
@@ -50,6 +56,10 @@ export async function generateRecommendation<T extends RecommendationResponse>(
 
   if (moduleType === ModuleType.Recipe && recipeType) {
     payload.recipeType = recipeType;
+  }
+
+  if (moduleType === ModuleType.Food && previousFoods && previousFoods.length) {
+    payload.previousFoods = previousFoods;
   }
 
   return postToGemini<T>(payload);
@@ -66,4 +76,17 @@ export async function generateRecipeVariation(
     variationRequest,
     restrictions,
   });
+}
+
+export async function explainResultForKids(
+  moduleType: ModuleType,
+  content: string,
+): Promise<string> {
+  const response = await postToGemini<KidsExplainResponse>({
+    operation: 'kids-explain',
+    moduleType,
+    content,
+  });
+
+  return response.simplified;
 }

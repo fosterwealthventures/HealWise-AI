@@ -131,12 +131,19 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ id, module, plan, restrictions,
     setItemInputs(newInputs);
   };
 
+  const collectPreviousFoodNames = () => {
+    if (!results || module.type !== ModuleType.Food) return [];
+    return results
+      .map((r) => (r as ApiResult as any).name as string | undefined)
+      .filter((name): name is string => Boolean(name));
+  };
+
   const handleSubmit = useCallback(async () => {
     const sourceInputs = isFreeRecommender ? (sharedInput ? [sharedInput] : []) : itemInputs;
     const trimmedInputs = sourceInputs.map(m => m.trim()).filter(m => m);
 
     if (trimmedInputs.length === 0) {
-      setError(`Please enter at least one idea in the input field.`);
+      setError('Please enter at least one idea in the input field.');
       return;
     }
 
@@ -159,14 +166,23 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ id, module, plan, restrictions,
     setError(null);
     setResults(null);
 
-    const finalInputString = trimmedInputs.join(', ');
-
     try {
-      const data = await generateRecommendation<ApiResult[]>(module.type, finalInputString, restrictions, module.type === ModuleType.Recipe ? recipeType : undefined);
+      const finalInputString = trimmedInputs.join(', ');
+      const data = await generateRecommendation<ApiResult[]>(
+        module.type,
+        finalInputString,
+        restrictions,
+        module.type === ModuleType.Recipe ? recipeType : undefined,
+      );
+      if (!Array.isArray(data)) {
+        console.error('Unexpected recommendation response shape', { data, moduleType: module.type });
+        setError('We could not interpret the response from the learning engine. Please try again.');
+        return;
+      }
       setResults(data);
       onSubmission(trimmedInputs.length, module.type);
     } catch (err: any) {
-      setError(err.message || "An unexpected error occurred. Please try again.");
+      setError(err.message || 'An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -203,6 +219,63 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ id, module, plan, restrictions,
                 <ResultsCard key={index} result={result} moduleType={module.type} restrictions={restrictions} onPlayVideo={onPlayVideo} plan={plan} onAddToPlanner={onAddToPlanner} />
               ))}
             </div>
+            {module.type === ModuleType.Food && !isLimitReached && (
+              <div className="mt-3 flex justify-center">
+                <button
+                  type="button"
+                  disabled={isLoading}
+                  onClick={async () => {
+                    const sourceInputs = isFreeRecommender ? (sharedInput ? [sharedInput] : []) : itemInputs;
+                    const trimmedInputs = sourceInputs.map((m) => m.trim()).filter((m) => m);
+
+                    if (trimmedInputs.length === 0) {
+                      setError('Please enter at least one idea in the input field.');
+                      return;
+                    }
+
+                    if (trimmedInputs.length > remaining) {
+                      const overage = trimmedInputs.length - remaining;
+                      const period = plan === 'free' ? 'day' : 'month';
+                      setError(
+                        `Learning limit reached. You are trying to explore ${trimmedInputs.length} entries, but you only have ${remaining} ${
+                          remaining === 1 ? 'session' : 'sessions'
+                        } left this ${period}. Please remove ${overage} entr${overage === 1 ? 'y' : 'ies'} to continue.`,
+                      );
+                      return;
+                    }
+
+                    setIsLoading(true);
+                    setError(null);
+
+                    try {
+                      const finalInputString = trimmedInputs.join(', ');
+                      const previousFoods = collectPreviousFoodNames();
+                      const data = await generateRecommendation<ApiResult[]>(
+                        module.type,
+                        finalInputString,
+                        restrictions,
+                        module.type === ModuleType.Recipe ? recipeType : undefined,
+                        previousFoods,
+                      );
+                      if (!Array.isArray(data)) {
+                        console.error('Unexpected recommendation response shape (more ideas)', { data, moduleType: module.type });
+                        setError('We could not interpret the response from the learning engine. Please try again.');
+                        return;
+                      }
+                      setResults(data);
+                      onSubmission(trimmedInputs.length, module.type);
+                    } catch (err: any) {
+                      setError(err.message || 'An unexpected error occurred. Please try again.');
+                    } finally {
+                      setIsLoading(false);
+                    }
+                  }}
+                  className="px-4 py-2 text-xs font-semibold text-brand-green-dark bg-brand-green/10 hover:bg-brand-green/20 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Show more ideas
+                </button>
+              </div>
+            )}
             <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-4 italic">
               Plain-language summaries for learning only. HealWise does not diagnose, prescribe, or replace professional guidance.
             </p>

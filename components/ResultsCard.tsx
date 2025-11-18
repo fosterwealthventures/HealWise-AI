@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { ApiResult, ModuleType, FoodResult, MedsAnalysisResult, HerbResult, RecipeResult, SubscriptionPlan, PlannerItem } from '../types';
-import { generateRecipeVariation } from '../services/geminiService';
+import { generateRecipeVariation, explainResultForKids } from '../services/geminiService';
 import { BookOpenIcon, BookmarkIcon, YoutubeIcon, WarningIcon } from './icons/ActionIcons';
-import { extractYouTubeId } from '../lib/youtube';
+import { getHerbVideoId } from '../lib/herbVideos';
 
 interface ResultsCardProps {
   result: ApiResult;
@@ -34,15 +34,17 @@ const RecipeCard: React.FC<{
     const [isSaving, setIsSaving] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
     const [note, setNote] = useState('');
+    const [gratitudeNote, setGratitudeNote] = useState('');
 
     const handleSaveClick = () => setIsSaving(true);
-    const handleCancelSave = () => { setIsSaving(false); setNote(''); };
+    const handleCancelSave = () => { setIsSaving(false); setNote(''); setGratitudeNote(''); };
     const handleConfirmSave = () => {
         try {
             onAddToPlanner({
                 moduleType,
                 result: currentRecipe,
                 note,
+                gratitudeNote,
             });
             setIsSaved(true);
             setTimeout(() => setIsSaved(false), 2500);
@@ -139,6 +141,14 @@ const RecipeCard: React.FC<{
                         aria-label="Note for planner"
                         autoFocus
                     />
+                    <input
+                        type="text"
+                        value={gratitudeNote}
+                        onChange={(e) => setGratitudeNote(e.target.value)}
+                        placeholder="Optional gratitude note (e.g., 'Thankful for the chance to try this')..."
+                        className="flex-grow w-full px-3 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-brand-green focus:border-brand-green outline-none transition bg-white dark:bg-brand-charcoal dark:text-brand-cream"
+                        aria-label="Optional gratitude note for planner"
+                    />
                     <button onClick={handleCancelSave} className="px-3 py-1.5 text-xs font-semibold bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors">
                         Cancel
                     </button>
@@ -171,6 +181,13 @@ const MedsAnalysisCard: React.FC<{ item: MedsAnalysisResult }> = ({ item }) => (
     <div>
         <h4 className="font-bold text-amber-600 dark:text-amber-400 text-lg mb-4">Medication Decoder</h4>
 
+        <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-300 text-xs text-amber-900 dark:bg-amber-900/40 dark:border-amber-700 dark:text-amber-100 flex items-start">
+            <WarningIcon />
+            <p className="ml-2">
+              Educational use only. This decoder is for studying how labels and ingredients are discussed in reputable sources. It does not diagnose, treat, prescribe, or tell you what to start, stop, or change. Always talk with a licensed clinician or pharmacist about decisions for your own care.
+            </p>
+        </div>
+
         {item.allergyWarnings && item.allergyWarnings.length > 0 && (
             <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/50 border border-amber-200 dark:border-amber-800/60 rounded-lg">
                 <h5 className="font-semibold text-amber-800 dark:text-amber-300 flex items-center mb-3">
@@ -194,7 +211,7 @@ const MedsAnalysisCard: React.FC<{ item: MedsAnalysisResult }> = ({ item }) => (
                 {item.individualMedications.map((med, i) => (
                     <div key={i} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                         <p className="font-semibold text-brand-charcoal dark:text-brand-cream">{med.name}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1"><strong className="text-gray-700 dark:text-gray-200">How it works (learning summary):</strong> {med.howItWorks}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1"><strong className="text-gray-700 dark:text-gray-200">How it affects the body (learning summary):</strong> {med.howItWorks}</p>
                         <div className="mt-2">
                             <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">Commonly Noted Effects:</p>
                             <ul className="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 pl-2">
@@ -227,9 +244,13 @@ const MedsAnalysisCard: React.FC<{ item: MedsAnalysisResult }> = ({ item }) => (
 
 const ResultsCard: React.FC<ResultsCardProps> = ({ result, moduleType, restrictions, onPlayVideo, plan, onAddToPlanner }) => {
   const [showDetails, setShowDetails] = useState(false);
+  const [showKidsExplanation, setShowKidsExplanation] = useState(false);
+  const [kidsExplanation, setKidsExplanation] = useState<string | null>(null);
+  const [isLoadingKids, setIsLoadingKids] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [note, setNote] = useState('');
+  const [gratitudeNote, setGratitudeNote] = useState('');
   
   const handleSaveClick = () => {
     setIsSaving(true);
@@ -238,6 +259,7 @@ const ResultsCard: React.FC<ResultsCardProps> = ({ result, moduleType, restricti
   const handleCancelSave = () => {
     setIsSaving(false);
     setNote('');
+    setGratitudeNote('');
   };
 
   const handleConfirmSave = () => {
@@ -246,6 +268,7 @@ const ResultsCard: React.FC<ResultsCardProps> = ({ result, moduleType, restricti
             moduleType,
             result,
             note,
+            gratitudeNote,
         });
         setIsSaved(true);
         setTimeout(() => setIsSaved(false), 2500);
@@ -254,6 +277,47 @@ const ResultsCard: React.FC<ResultsCardProps> = ({ result, moduleType, restricti
         alert("There was an error saving your item. Please try again.");
     } finally {
         handleCancelSave();
+    }
+  };
+
+  const handleToggleKidsExplanation = async () => {
+    if (showKidsExplanation) {
+      setShowKidsExplanation(false);
+      return;
+    }
+
+    if (kidsExplanation) {
+      setShowKidsExplanation(true);
+      return;
+    }
+
+    try {
+      setIsLoadingKids(true);
+
+      let content = '';
+      if (moduleType === ModuleType.Food) {
+        const item = result as FoodResult;
+        content = `${item.name}: ${item.description}. Study summary: ${item.studySummary}. Stewardship note: ${item.stewardshipNote}`;
+      } else if (moduleType === ModuleType.Herbs) {
+        const item = result as HerbResult;
+        content = `${item.name}: ${item.benefits}. Study citation summary: ${item.studyCitation}`;
+      } else if (moduleType === ModuleType.Meds) {
+        const item = result as MedsAnalysisResult;
+        const medsNames = item.individualMedications.map((m) => m.name).join(', ');
+        content = `These items are being decoded: ${medsNames}. This card explains how they generally work in the body, common side effects, and any ingredient flags from your avoid list.`;
+      } else if (moduleType === ModuleType.Recipe) {
+        const item = result as RecipeResult;
+        content = `Recipe "${item.recipeName}": ${item.description}. Ingredients: ${item.ingredients.join(', ')}.`;
+      }
+
+      const simplified = await explainResultForKids(moduleType, content);
+      setKidsExplanation(simplified);
+      setShowKidsExplanation(true);
+    } catch (error) {
+      console.error('Failed to load kid-friendly explanation', error);
+      alert('Sorry, we could not simplify this explanation right now. Please try again.');
+    } finally {
+      setIsLoadingKids(false);
     }
   };
 
@@ -267,9 +331,21 @@ const ResultsCard: React.FC<ResultsCardProps> = ({ result, moduleType, restricti
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">{item.description}</p>
             {showDetails && <DetailsDrawer>
                 <>
-                    <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">Study Summary:</p>
+                    <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+                      Study Summary
+                      <span className="ml-1 text-[10px] font-normal text-gray-400 dark:text-gray-500">
+                        (a short takeaway from a research source)
+                      </span>
+                      :
+                    </p>
                     <p className="mt-1 text-xs text-gray-600 dark:text-gray-300 italic">"{item.studySummary}"</p>
-                    <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 mt-3">Stewardship Note:</p>
+                    <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 mt-3">
+                      Stewardship Note
+                      <span className="ml-1 text-[10px] font-normal text-gray-400 dark:text-gray-500">
+                        (a reflection on caring for body, budget, and creation)
+                      </span>
+                      :
+                    </p>
                     <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">{item.stewardshipNote}</p>
                 </>
             </DetailsDrawer>}
@@ -278,34 +354,23 @@ const ResultsCard: React.FC<ResultsCardProps> = ({ result, moduleType, restricti
       }
       case ModuleType.Herbs: {
         const item = result as HerbResult;
-        const videoId = extractYouTubeId(item.youtubeLink);
-        const canEmbed = Boolean(videoId);
+        const videoId = getHerbVideoId(item.name);
         return (
           <>
             <h4 className="font-bold text-brand-green-dark dark:text-brand-green-light">{item.name}</h4>
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">{item.benefits}</p>
-            {item.youtubeLink && (
-              canEmbed ? (
+            {videoId && (
               <button 
                 onClick={() => onPlayVideo(videoId)} 
                 className="mt-2 inline-flex items-center text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
               >
                   <YoutubeIcon /> Watch on YouTube
               </button>
-              ) : (
-                <a
-                  href={item.youtubeLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-2 inline-flex items-center text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                  title="Opens in YouTube (embedding disabled)"
-                >
-                  <YoutubeIcon /> Watch on YouTube
-                </a>
-              )
             )}
             {showDetails && <DetailsDrawer>
-                 <p className="text-xs text-gray-600 dark:text-gray-300 italic">Citation: {item.studyCitation}</p>
+                 <p className="text-xs text-gray-600 dark:text-gray-300 italic">
+                   Citation (where this idea shows up in the literature or a trusted source): {item.studyCitation}
+                 </p>
             </DetailsDrawer>}
           </>
         );
@@ -326,8 +391,16 @@ const ResultsCard: React.FC<ResultsCardProps> = ({ result, moduleType, restricti
 
   return (
     <div className="p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200/80 dark:border-gray-700/80 shadow-sm animate-fade-in flex flex-col">
-        <div className="flex-grow">{renderContent()}</div>
-        
+        <div className="flex-grow">
+          {renderContent()}
+          {showKidsExplanation && kidsExplanation && (
+            <DetailsDrawer>
+              <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1">Kid-friendly explanation</p>
+              <p className="text-xs text-gray-600 dark:text-gray-300">{kidsExplanation}</p>
+            </DetailsDrawer>
+          )}
+        </div>
+
         {showGenericActions && (
             <>
                 {isSaving && (
@@ -342,6 +415,14 @@ const ResultsCard: React.FC<ResultsCardProps> = ({ result, moduleType, restricti
                                 aria-label="Note for planner"
                                 autoFocus
                             />
+                            <input
+                                type="text"
+                                value={gratitudeNote}
+                                onChange={(e) => setGratitudeNote(e.target.value)}
+                                placeholder="Optional gratitude note (e.g., 'Thankful for energy to explore this')..."
+                                className="flex-grow w-full px-3 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-brand-green focus:border-brand-green outline-none transition bg-white dark:bg-brand-charcoal dark:text-brand-cream"
+                                aria-label="Optional gratitude note for planner"
+                            />
                             <button onClick={handleCancelSave} className="px-3 py-1.5 text-xs font-semibold bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors">
                                 Cancel
                             </button>
@@ -355,7 +436,14 @@ const ResultsCard: React.FC<ResultsCardProps> = ({ result, moduleType, restricti
                 {!isSaving && (
                     <>
                         <div className="mt-4 h-px bg-gray-200/80 dark:bg-gray-700"></div>
-                        <div className="mt-3 flex items-center justify-end space-x-3">
+                        <div className="mt-3 flex items-center justify-between space-x-3">
+                            <button
+                              type="button"
+                              onClick={handleToggleKidsExplanation}
+                              className="flex items-center space-x-1 text-[11px] font-medium text-gray-400 dark:text-gray-500 hover:text-brand-green-dark dark:hover:text-brand-green-light transition-colors"
+                            >
+                              <span>{isLoadingKids ? 'Preparing kid-friendly view…' : showKidsExplanation ? 'Hide kid-friendly view' : 'Explain this in kid-friendly language'}</span>
+                            </button>
                             {hasDetails && (
                                 <button onClick={() => setShowDetails(!showDetails)} className="flex items-center space-x-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-brand-green-dark dark:hover:text-brand-green-light transition-colors">
                                     <BookOpenIcon />
@@ -378,6 +466,9 @@ const ResultsCard: React.FC<ResultsCardProps> = ({ result, moduleType, restricti
                                 </>
                             )}
                         </div>
+                        <p className="mt-2 text-[10px] leading-snug text-gray-400 dark:text-gray-500">
+                          This explanation was generated by an AI model using HealWise&apos;s educational prompts and your ingredient preferences. It is for learning only and is not a diagnosis, treatment plan, or medical advice.
+                        </p>
                     </>
                 )}
             </>

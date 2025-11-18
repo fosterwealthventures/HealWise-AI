@@ -3,9 +3,16 @@ import React from 'react';
 interface ProfileViewProps {
   restrictions: string;
   setRestrictions: (value: string) => void;
+  showFaithEncouragement: boolean;
+  setShowFaithEncouragement: (value: boolean) => void;
 }
 
-const ProfileView: React.FC<ProfileViewProps> = ({ restrictions, setRestrictions }) => {
+const ProfileView: React.FC<ProfileViewProps> = ({
+  restrictions,
+  setRestrictions,
+  showFaithEncouragement,
+  setShowFaithEncouragement,
+}) => {
   return (
     <div className="animate-fade-in max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold text-brand-charcoal dark:text-brand-cream">User Profile</h1>
@@ -27,6 +34,37 @@ const ProfileView: React.FC<ProfileViewProps> = ({ restrictions, setRestrictions
         />
         <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 text-right">
           Changes are saved automatically on this device.
+        </p>
+      </div>
+
+      <div className="mt-6 p-6 bg-white dark:bg-brand-charcoal-light rounded-2xl shadow-card">
+        <h3 className="text-xl font-bold text-brand-charcoal dark:text-brand-cream">
+          Faith-Based Encouragement
+        </h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+          When this is on, HealWise will occasionally surface gentle prompts around gratitude, stewardship, and hope from a biblical perspective&mdash;always as invitations, never as prescriptions or replacements for professional care.
+        </p>
+        <div className="mt-4 flex items-center justify-between">
+          <span className="text-sm text-gray-700 dark:text-gray-200">
+            Show faith-based encouragement in the app
+          </span>
+          <button
+            type="button"
+            onClick={() => setShowFaithEncouragement(!showFaithEncouragement)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              showFaithEncouragement ? 'bg-brand-green' : 'bg-gray-300 dark:bg-gray-600'
+            }`}
+            aria-pressed={showFaithEncouragement}
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                showFaithEncouragement ? 'translate-x-5' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+        <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
+          You can turn this off at any time if you prefer a more neutral learning space.
         </p>
       </div>
     </div>

@@ -41,9 +41,18 @@ const PlannerItemCard: React.FC<{
         </button>
       </div>
       
-      {item.note && (
-        <div className="mb-4 p-3 bg-brand-gold/10 dark:bg-amber-900/40 rounded-lg text-sm text-amber-800 dark:text-amber-300 italic">
-          <span className="font-semibold">Note:</span> "{item.note}"
+      {(item.note || item.gratitudeNote) && (
+        <div className="mb-4 p-3 bg-brand-gold/10 dark:bg-amber-900/40 rounded-lg text-sm text-amber-800 dark:text-amber-300">
+          {item.note && (
+            <p className="italic">
+              <span className="font-semibold">Note:</span> "{item.note}"
+            </p>
+          )}
+          {item.gratitudeNote && (
+            <p className="italic mt-1">
+              <span className="font-semibold">Gratitude:</span> "{item.gratitudeNote}"
+            </p>
+          )}
         </div>
       )}
       
@@ -63,7 +72,8 @@ const PlannerItemCard: React.FC<{
 const PlannerView: React.FC<{
   items: PlannerItem[];
   setItems: (items: PlannerItem[]) => void;
-}> = ({ items, setItems }) => {
+  showFaithEncouragement: boolean;
+}> = ({ items, setItems, showFaithEncouragement }) => {
 
   const handleExport = () => {
     if (items.length === 0) {
@@ -104,6 +114,11 @@ const PlannerView: React.FC<{
             <div>
                 <h1 className="text-3xl font-bold text-brand-charcoal dark:text-brand-cream">My Wellness Planner</h1>
                 <p className="text-gray-500 dark:text-gray-400 mt-1">Review, reflect, and export the learning cards you’ve saved.</p>
+                {showFaithEncouragement && items.length > 0 && (
+                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 max-w-xl">
+                    As you look back on these notes, you might jot down one small thing you&apos;re thankful for this week, or one question you hope to bring to God and to a trusted professional.
+                  </p>
+                )}
             </div>
             <div className="flex items-center gap-x-3">
                  <button 

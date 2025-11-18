@@ -5,7 +5,9 @@ import { logger } from '../utils/logger';
 import { HttpError } from '../middleware/errorHandler';
 
 const stripe = env.STRIPE_SECRET_KEY
-  ? new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: '2024-12-18' as Stripe.LatestApiVersion })
+  ? new Stripe(env.STRIPE_SECRET_KEY, {
+      apiVersion: '2022-11-15' as Stripe.StripeConfig['apiVersion'],
+    })
   : null;
 
 const priceMap: Partial<Record<SubscriptionPlan, string>> = {
@@ -52,6 +54,9 @@ export const createCheckoutSession = async (plan: SubscriptionPlan) => {
       plan,
       error: error instanceof Error ? error.message : 'Unknown error',
     });
-    throw error;
+    if (error instanceof Error) {
+      throw new HttpError(500, error.message);
+    }
+    throw new HttpError(500, 'Unknown Stripe error');
   }
 };

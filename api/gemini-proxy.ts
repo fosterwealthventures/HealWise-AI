@@ -8,6 +8,7 @@ interface BaseRecommendationPayload {
   input: string;
   restrictions?: string;
   recipeType?: RecipeType;
+  previousFoods?: string[];
 }
 
 interface RecipeResult {
@@ -23,6 +24,12 @@ interface RecipeVariationPayload {
   originalRecipe: RecipeResult;
   variationRequest: string;
   restrictions?: string;
+}
+
+interface KidsExplainPayload {
+  operation: 'kids-explain';
+  moduleType: ModuleType;
+  content: string;
 }
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash';
@@ -237,13 +244,38 @@ const recipeSchema = {
   additionalProperties: false,
 };
 
+const kidsExplainSchema = {
+  type: 'object',
+  properties: {
+    simplified: { type: 'string' },
+  },
+  required: ['simplified'],
+  additionalProperties: false,
+};
+
 const generateRecommendations = async (payload: BaseRecommendationPayload) => {
-  const { moduleType, input, restrictions, recipeType } = payload;
+  const { moduleType, input, restrictions, recipeType, previousFoods } = payload;
   const clause = getRestrictionClause(restrictions);
 
   switch (moduleType) {
     case ModuleType.Food: {
-      const prompt = `A learner is curious about the wellness focus "${input}". Suggest 3 diverse whole foods (e.g., fruit, vegetable, grain, legume) that are often discussed in reputable nutrition sources related to that focus. For each food, provide a short educational description, a simplified summary of a relevant study or evidence source, and a stewardship or mindful-living note. Do not offer prescriptions, dosages, or individualized medical advice.${clause}`;
+      const avoidClause =
+        previousFoods && previousFoods.length
+          ? ` Avoid repeating foods that have already been suggested for this learner, especially: ${previousFoods.join(
+              ', ',
+            )}.`
+          : '';
+
+      const prompt = `A learner is curious about the wellness focus "${input}". Suggest 3 diverse true whole foods that someone might find in a grocery store that are often discussed in reputable nutrition sources related to that focus.
+
+1. Always provide a mix of categories across the three suggestions. Aim for:
+   - at least one fruit or vegetable,
+   - at least one whole grain or legume,
+   - and, when the learner's ingredient preferences do not indicate that they avoid animal products (for example vegetarian, vegan, or plant-based only), at least one animal-based whole food such as eggs, fish, or minimally processed meats. If their preferences clearly avoid animal products, all suggestions may be plant-based.
+2. Avoid repeating the same specific food name for many different themes. Only suggest commonly overused examples like quinoa or salmon if they are especially relevant to this particular focus.
+3. Do not include herbs, herbal supplements, spices, teas, capsules, extracts, or powders as standalone items.
+4. For each food, provide a short educational description, a simplified summary of a relevant study or evidence source, and a stewardship or mindful-living note.
+5. Do not offer prescriptions, dosages, or individualized medical advice. Every suggested food must respect the learner's stated ingredient preferences and avoid-list first.${avoidClause}${clause}`;
       return fetchWithSchema(prompt, foodSchema);
     }
     case ModuleType.Herbs: {
@@ -290,6 +322,11 @@ ${clause}`;
   const result = await fetchWithSchema<RecipeResult>(prompt, recipeSchema);
   result.recipeType = originalRecipe.recipeType;
   return result;
+};
+
+const generateKidsExplanation = async ({ content }: KidsExplainPayload) => {
+  const prompt = `Rewrite the following explanation in warm, plain language suitable for a curious older child or young teen (around ages 10–14). Keep it accurate and non-scary, avoid medical commands or dosing advice, and focus on helping them understand the big idea in a calm, hopeful way.\n\nOriginal explanation:\n"${content}"`;
+  return fetchWithSchema<{ simplified: string }>(prompt, kidsExplainSchema);
 };
 
 const parseBody = (req: VercelRequest) => {
@@ -345,6 +382,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       const data = await generateRecipeVariation(variation);
+      res.status(200).json(data);
+      return;
+    }
+
+    if (operation === 'kids-explain') {
+      const kidsPayload = payload as KidsExplainPayload;
+      if (!kidsPayload.content || typeof kidsPayload.content !== 'string') {
+        res.status(400).json({ error: 'Invalid kids-explain payload' });
+        return;
+      }
+
+      const data = await generateKidsExplanation(kidsPayload);
       res.status(200).json(data);
       return;
     }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { SignIn } from '@clerk/clerk-react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import DashboardView from './components/DashboardView';
@@ -25,6 +26,11 @@ const DashboardShell: React.FC = () => {
     return 'free';
   });
   const [restrictions, setRestrictions] = useState(() => localStorage.getItem('healwiseRestrictions') || '');
+  const [showFaithEncouragement, setShowFaithEncouragement] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    const stored = localStorage.getItem('healwiseFaithEncouragement');
+    return stored === 'true';
+  });
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [plannerItems, setPlannerItems] = useState<PlannerItem[]>(() => {
     try {
@@ -64,6 +70,10 @@ const DashboardShell: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('healwiseRestrictions', restrictions);
   }, [restrictions]);
+
+  useEffect(() => {
+    localStorage.setItem('healwiseFaithEncouragement', String(showFaithEncouragement));
+  }, [showFaithEncouragement]);
 
   useEffect(() => {
     localStorage.setItem('healwisePlannerItems', JSON.stringify(plannerItems));
@@ -136,9 +146,16 @@ const DashboardShell: React.FC = () => {
           />
         );
       case 'planner':
-        return <PlannerView items={plannerItems} setItems={setPlannerItems} />;
+        return <PlannerView items={plannerItems} setItems={setPlannerItems} showFaithEncouragement={showFaithEncouragement} />;
       case 'profile':
-        return <ProfileView restrictions={restrictions} setRestrictions={setRestrictions} />;
+        return (
+          <ProfileView
+            restrictions={restrictions}
+            setRestrictions={setRestrictions}
+            showFaithEncouragement={showFaithEncouragement}
+            setShowFaithEncouragement={setShowFaithEncouragement}
+          />
+        );
       case 'shop':
         return <div className="text-center p-10 dark:text-brand-cream">Shop View - Coming Soon!</div>;
       case 'payment-success':
@@ -146,7 +163,15 @@ const DashboardShell: React.FC = () => {
       case 'payment-cancel':
         return <PaymentCancelView setActiveView={setActiveView} />;
       default:
-        return <DashboardView plan={plan} restrictions={restrictions} onAddToPlanner={handleAddToPlanner} setActiveView={setActiveView} />;
+        return (
+          <DashboardView
+            plan={plan}
+            restrictions={restrictions}
+            onAddToPlanner={handleAddToPlanner}
+            setActiveView={setActiveView}
+            showFaithEncouragement={showFaithEncouragement}
+          />
+        );
     }
   }
 
@@ -195,7 +220,23 @@ const App: React.FC = () => (
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<Navigate to="/healwise/dashboard" replace />} />
-      <Route path="/healwise/dashboard" element={<DashboardShell />} />
+      <Route path="/healwise/dashboard/*" element={<DashboardShell />} />
+      <Route
+        path="/healwise/sign-in/*"
+        element={
+          <div className="min-h-screen flex items-center justify-center bg-brand-cream dark:bg-brand-charcoal">
+            <div className="max-w-md w-full p-6 bg-white dark:bg-brand-charcoal-light rounded-2xl shadow-card">
+              <h1 className="text-2xl font-bold text-brand-charcoal dark:text-brand-cream mb-4 text-center">
+                Sign in to HealWise
+              </h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center">
+                Create a free account or sign in to access paid plans and sync your learning across devices.
+              </p>
+              <SignIn routing="path" path="/healwise/sign-in" />
+            </div>
+          </div>
+        }
+      />
     </Routes>
   </BrowserRouter>
 );

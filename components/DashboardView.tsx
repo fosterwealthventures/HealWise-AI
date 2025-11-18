@@ -141,14 +141,15 @@ const DashboardView: React.FC<{
   restrictions: string;
   onAddToPlanner: (item: Omit<PlannerItem, 'id' | 'savedAt'>) => void;
   setActiveView: (view: string) => void;
-}> = ({ plan, restrictions, onAddToPlanner, setActiveView }) => {
+  showFaithEncouragement: boolean;
+}> = ({ plan, restrictions, onAddToPlanner, setActiveView, showFaithEncouragement }) => {
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
   const [dailyUsage, setDailyUsage] = useState<DailyUsage>(getInitialDailyUsage);
   const [monthlyUsage, setMonthlyUsage] = useState<MonthlyUsage>(getInitialMonthlyUsage);
   const [freeTierCondition, setFreeTierCondition] = useState('');
 
   const limits = {
-      free: { conditions: 1, meds: 1 },
+      free: { conditions: 8, meds: 1 },
       pro: { analyses: 50 },
       premium: { analyses: 100 }
   };
@@ -224,6 +225,11 @@ const DashboardView: React.FC<{
         <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
           — Ezekiel 47:12
         </p>
+        {showFaithEncouragement && (
+          <p className="mt-3 text-sm text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
+            As you explore foods, herbs, and routines, you&apos;re welcome to pause for gratitude&mdash;for daily bread, for small improvements, and for the wisdom of trusted professionals walking with you.
+          </p>
+        )}
       </div>
       
       <RestrictionsDisplay restrictions={restrictions} onEdit={() => setActiveView('profile')} />
