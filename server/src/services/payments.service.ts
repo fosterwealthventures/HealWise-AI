@@ -9,13 +9,25 @@ const stripe = env.STRIPE_SECRET_KEY
       apiVersion: '2022-11-15' as Stripe.StripeConfig['apiVersion'],
     })
   : null;
+type CheckoutPlanKey = 'pro_month' | 'pro_year' | 'premium_month' | 'premium_year';
 
-const priceMap: Partial<Record<SubscriptionPlan, string>> = {
-  pro: env.STRIPE_PRICE_ID_PRO,
-  premium: env.STRIPE_PRICE_ID_PREMIUM,
+const planKeyToPlan: Record<CheckoutPlanKey, SubscriptionPlan> = {
+  pro_month: 'pro',
+  pro_year: 'pro',
+  premium_month: 'premium',
+  premium_year: 'premium',
 };
 
-export const createCheckoutSession = async (plan: SubscriptionPlan) => {
+const priceMap: Partial<Record<CheckoutPlanKey, string>> = {
+  pro_month: env.STRIPE_PRICE_PRO_MONTH,
+  pro_year: env.STRIPE_PRICE_PRO_YEAR,
+  premium_month: env.STRIPE_PRICE_PREMIUM_MONTH,
+  premium_year: env.STRIPE_PRICE_PREMIUM_YEAR,
+};
+
+export const createCheckoutSession = async (planKey: CheckoutPlanKey) => {
+  const plan = planKeyToPlan[planKey];
+
   if (plan === 'free') {
     throw new HttpError(400, 'Free plan does not require checkout');
   }
@@ -24,10 +36,10 @@ export const createCheckoutSession = async (plan: SubscriptionPlan) => {
     throw new HttpError(500, 'Stripe secret key is not configured');
   }
 
-  const priceId = priceMap[plan];
+  const priceId = priceMap[planKey];
 
   if (!priceId) {
-    throw new HttpError(500, `No Stripe price configured for ${plan} plan`);
+    throw new HttpError(500, `No Stripe price configured for ${planKey} plan`);
   }
 
   try {
@@ -43,7 +55,7 @@ export const createCheckoutSession = async (plan: SubscriptionPlan) => {
           quantity: 1,
         },
       ],
-      metadata: { plan },
+      metadata: { plan, planKey },
     });
 
     logger.info('Stripe checkout session created', { plan, sessionId: session.id });

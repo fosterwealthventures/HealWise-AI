@@ -387,7 +387,10 @@ const ResultsCard: React.FC<ResultsCardProps> = ({ result, moduleType, restricti
   };
 
   const hasDetails = moduleType === ModuleType.Food || moduleType === ModuleType.Herbs;
-  const showGenericActions = moduleType === ModuleType.Food || moduleType === ModuleType.Herbs;
+  const showGenericActions =
+    moduleType === ModuleType.Food ||
+    moduleType === ModuleType.Herbs ||
+    moduleType === ModuleType.Meds;
 
   return (
     <div className="p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200/80 dark:border-gray-700/80 shadow-sm animate-fade-in flex flex-col">

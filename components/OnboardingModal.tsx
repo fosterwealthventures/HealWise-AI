@@ -63,7 +63,11 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onComplete, restricti
                 <FeatureCard icon={<AppleIcon />} title="Whole-Food Explorer" description="See how everyday foods are discussed in reputable studies." />
                 <FeatureCard icon={<LeafIcon />} title="Herbal Field Notes" description="Learn about botanicals through annotated citations and videos." />
                 <FeatureCard icon={<PillIcon />} title="Medication Decoder" description="Translate labels into plain English—no dosing or prescribing." />
-                <FeatureCard icon={<BlenderIcon />} title="Recipe Idea Lab" description="Generate Juice, Smoothie, and Tea inspiration for your focus." />
+                <FeatureCard
+                  icon={<BlenderIcon />}
+                  title="Recipe Idea Lab"
+                  description="Describe your focus in the main box (e.g., 'gentle juice idea for gout'), then use “Request a variation” to tweak things like all-fruit, only greens, or milder options."
+                />
             </div>
           </div>
         );

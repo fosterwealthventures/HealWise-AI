@@ -1,14 +1,17 @@
 import React from 'react';
+import HealWiseLogo from '../src/assets/HealWise_logo.png';
 
 const Logo = () => (
   <div className="flex flex-col px-4">
     <div className="flex items-center space-x-3">
       <div className="bg-brand-green p-2 rounded-lg">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V14.75C10.41 14.58 10 14.05 10 13.5V11.5C10 10.67 10.67 10 11.5 10H12.5C13.33 10 14 10.67 14 11.5V13.5C14 14.05 13.59 14.58 13 14.75V17ZM12 9C11.45 9 11 8.55 11 8V7C11 6.45 11.45 6 12 6C12.55 6 13 6.45 13 7V8C13 8.55 12.55 9 12 9Z" fill="#FEFBF6"/>
-        </svg>
+        <img
+          src={HealWiseLogo}
+          alt="HealWise AI logo"
+          className="h-8 w-8 rounded-md object-contain"
+        />
       </div>
-      <span className="text-2xl font-bold text-brand-green-dark dark:text-brand-cream tracking-tight">HealWise</span>
+      <span className="text-2xl font-bold text-brand-green-dark dark:text-brand-cream tracking-tight">HealWise AI</span>
     </div>
     <span className="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5 ml-1 tracking-wider font-medium uppercase">a Foster Wealth Ventures creation</span>
   </div>

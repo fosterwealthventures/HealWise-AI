@@ -28,6 +28,10 @@ const envSchema = z.object({
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_PRICE_ID_PRO: z.string().optional(),
   STRIPE_PRICE_ID_PREMIUM: z.string().optional(),
+  STRIPE_PRICE_PRO_MONTH: z.string().optional(),
+  STRIPE_PRICE_PRO_YEAR: z.string().optional(),
+  STRIPE_PRICE_PREMIUM_MONTH: z.string().optional(),
+  STRIPE_PRICE_PREMIUM_YEAR: z.string().optional(),
 });
 
 const env = envSchema.parse(process.env);
@@ -35,6 +39,10 @@ const env = envSchema.parse(process.env);
 console.log('[env] Stripe prices', {
   STRIPE_PRICE_ID_PRO: process.env.STRIPE_PRICE_ID_PRO,
   STRIPE_PRICE_ID_PREMIUM: process.env.STRIPE_PRICE_ID_PREMIUM,
+  STRIPE_PRICE_PRO_MONTH: process.env.STRIPE_PRICE_PRO_MONTH,
+  STRIPE_PRICE_PRO_YEAR: process.env.STRIPE_PRICE_PRO_YEAR,
+  STRIPE_PRICE_PREMIUM_MONTH: process.env.STRIPE_PRICE_PREMIUM_MONTH,
+  STRIPE_PRICE_PREMIUM_YEAR: process.env.STRIPE_PRICE_PREMIUM_YEAR,
 });
 
 export type Env = typeof env;

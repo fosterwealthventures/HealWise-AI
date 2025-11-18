@@ -20,9 +20,18 @@ const PlanCard: React.FC<{
   onSelect: () => void;
   buttonText: string;
   isProcessing?: boolean;
+  secondaryButtonText?: string;
+  onSecondarySelect?: () => void;
+  secondaryIsProcessing?: boolean;
 }> = ({
   planName, price, period, description, features,
-  isFeatured = false, onSelect, buttonText, isProcessing = false
+  isFeatured = false,
+  onSelect,
+  buttonText,
+  isProcessing = false,
+  secondaryButtonText,
+  onSecondarySelect,
+  secondaryIsProcessing = false,
 }) => {
   const cardClasses = isFeatured
     ? 'bg-brand-green-dark text-white border-2 border-brand-green-dark'
@@ -55,6 +64,16 @@ const PlanCard: React.FC<{
       >
         {isProcessing ? 'Redirecting…' : buttonText}
       </button>
+      {secondaryButtonText && onSecondarySelect && (
+        <button
+          onClick={onSecondarySelect}
+          disabled={secondaryIsProcessing}
+          aria-busy={secondaryIsProcessing}
+          className={`mt-3 block w-full py-3 px-6 text-center font-semibold rounded-lg shadow-md transition-transform transform ${secondaryIsProcessing ? 'opacity-60 cursor-not-allowed' : 'hover:scale-105'} ${buttonClasses}`}
+        >
+          {secondaryIsProcessing ? 'Redirecting…' : secondaryButtonText}
+        </button>
+      )}
     </div>
   );
 };
@@ -113,7 +132,7 @@ const PricingPage: React.FC<Props> = ({ onSelectFreePlan, setActiveView }) => {
           planName="Pro"
           price="$7.99"
           period="/month"
-          description="For curious learners who want more flexibility. Go annual for $79 and save over 15%!"
+          description="For curious learners who want more flexibility."
           features={[
             'Up to 50 learning pulls per month',
             'Mix and match topics across modules',
@@ -122,14 +141,17 @@ const PricingPage: React.FC<Props> = ({ onSelectFreePlan, setActiveView }) => {
           ]}
           isFeatured
           onSelect={() => { void handleCheckout('pro_month'); }}
-          buttonText="Upgrade to Pro"
+          buttonText="Upgrade to Pro – $7.99/month"
           isProcessing={processingPlan === 'pro_month'}
+          secondaryButtonText="Go annual – $79/year (save 15%)"
+          onSecondarySelect={() => { void handleCheckout('pro_year'); }}
+          secondaryIsProcessing={processingPlan === 'pro_year'}
         />
         <PlanCard
           planName="Premium"
           price="$14.99"
           period="/month"
-          description="For power researchers and community teams. Go annual for $99 and save over 40%!"
+          description="For power researchers and community teams."
           features={[
             'Everything in Pro, plus:',
             'Up to 100 learning pulls per month',
@@ -137,8 +159,11 @@ const PricingPage: React.FC<Props> = ({ onSelectFreePlan, setActiveView }) => {
             'Priority access to new reflection tools',
           ]}
           onSelect={() => { void handleCheckout('premium_month'); }}
-          buttonText="Upgrade to Premium"
+          buttonText="Upgrade to Premium – $14.99/month"
           isProcessing={processingPlan === 'premium_month'}
+          secondaryButtonText="Go annual – $99/year (save 40%)"
+          onSecondarySelect={() => { void handleCheckout('premium_year'); }}
+          secondaryIsProcessing={processingPlan === 'premium_year'}
         />
       </div>
 

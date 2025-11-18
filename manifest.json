@@ -4,10 +4,10 @@
   "description": "A plain-language wellness learning companion that translates reputable sources into food-first explainers, journals, and recipe inspiration.",
   "icons": [
     {
-      "src": "logo.svg",
-      "type": "image/svg+xml",
-      "sizes": "any",
-      "purpose": "any"
+      "src": "/HealWise_logo.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
   "start_url": "/",

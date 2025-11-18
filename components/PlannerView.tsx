@@ -1,5 +1,5 @@
 import React from 'react';
-import { PlannerItem, ModuleType } from '../types';
+import { PlannerItem, ModuleType, SubscriptionPlan } from '../types';
 import ResultsCard from './ResultsCard';
 import VideoPlayerModal from './VideoPlayerModal';
 import { AppleIcon, LeafIcon, PillIcon, BlenderIcon } from './icons/ModuleIcons';
@@ -73,7 +73,8 @@ const PlannerView: React.FC<{
   items: PlannerItem[];
   setItems: (items: PlannerItem[]) => void;
   showFaithEncouragement: boolean;
-}> = ({ items, setItems, showFaithEncouragement }) => {
+  plan: SubscriptionPlan;
+}> = ({ items, setItems, showFaithEncouragement, plan }) => {
 
   const handleExport = () => {
     if (items.length === 0) {
@@ -118,6 +119,30 @@ const PlannerView: React.FC<{
                   <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 max-w-xl">
                     As you look back on these notes, you might jot down one small thing you&apos;re thankful for this week, or one question you hope to bring to God and to a trusted professional.
                   </p>
+                )}
+                {plan === 'premium' && (
+                  <div className="mt-4 p-4 bg-brand-green/5 dark:bg-brand-green/10 border border-brand-green/30 rounded-xl">
+                    <h2 className="text-sm font-semibold text-brand-charcoal dark:text-brand-cream">
+                      Guided journaling templates (Premium)
+                    </h2>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      When you have a quiet moment, you can use these simple prompts to turn your saved cards into short reflections.
+                    </p>
+                    <ul className="mt-3 grid gap-2 text-xs text-gray-600 dark:text-gray-300">
+                      <li className="px-3 py-2 bg-white/70 dark:bg-brand-charcoal/60 rounded-lg">
+                        <span className="font-semibold">Symptom + stewardship check-in:</span>{' '}
+                        Today I noticed..., I tried..., it seemed to help/hurt..., next tiny step I&apos;d like to take is....
+                      </li>
+                      <li className="px-3 py-2 bg-white/70 dark:bg-brand-charcoal/60 rounded-lg">
+                        <span className="font-semibold">Food, herbs, and gratitude:</span>{' '}
+                        One small provision I&apos;m thankful for today is..., I see God&apos;s care in..., and I&apos;d like to remember....
+                      </li>
+                      <li className="px-3 py-2 bg-white/70 dark:bg-brand-charcoal/60 rounded-lg">
+                        <span className="font-semibold">Questions for my care team:</span>{' '}
+                        From these cards, I&apos;m curious about..., I&apos;m still unsure about..., and I&apos;d value my clinician&apos;s perspective on....
+                      </li>
+                    </ul>
+                  </div>
                 )}
             </div>
             <div className="flex items-center gap-x-3">

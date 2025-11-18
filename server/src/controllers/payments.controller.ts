@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { createCheckoutSession } from '../services/payments.service';
 
 const checkoutSchema = z.object({
-  plan: z.enum(['free', 'pro', 'premium']),
+  plan: z.enum(['pro_month', 'pro_year', 'premium_month', 'premium_year']),
 });
 
 export const createCheckoutSessionHandler = async (

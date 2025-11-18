@@ -26,11 +26,7 @@ const DashboardShell: React.FC = () => {
     return 'free';
   });
   const [restrictions, setRestrictions] = useState(() => localStorage.getItem('healwiseRestrictions') || '');
-  const [showFaithEncouragement, setShowFaithEncouragement] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    const stored = localStorage.getItem('healwiseFaithEncouragement');
-    return stored === 'true';
-  });
+  const [showFaithEncouragement, setShowFaithEncouragement] = useState<boolean>(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [plannerItems, setPlannerItems] = useState<PlannerItem[]>(() => {
     try {
@@ -72,8 +68,16 @@ const DashboardShell: React.FC = () => {
   }, [restrictions]);
 
   useEffect(() => {
-    localStorage.setItem('healwiseFaithEncouragement', String(showFaithEncouragement));
-  }, [showFaithEncouragement]);
+    if (typeof window === 'undefined') return;
+
+    // Paid subscribers: remember preference
+    if (plan === 'pro' || plan === 'premium') {
+      localStorage.setItem('healwiseFaithEncouragement', String(showFaithEncouragement));
+    } else {
+      // Free users: do not persist preference
+      localStorage.removeItem('healwiseFaithEncouragement');
+    }
+  }, [showFaithEncouragement, plan]);
 
   useEffect(() => {
     localStorage.setItem('healwisePlannerItems', JSON.stringify(plannerItems));
@@ -81,6 +85,24 @@ const DashboardShell: React.FC = () => {
 
   useEffect(() => {
     localStorage.setItem('healwisePlan', plan);
+  }, [plan]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    if (plan === 'pro' || plan === 'premium') {
+      const stored = localStorage.getItem('healwiseFaithEncouragement');
+      if (stored === 'true') {
+        setShowFaithEncouragement(true);
+      } else if (stored === 'false') {
+        setShowFaithEncouragement(false);
+      } else {
+        setShowFaithEncouragement(true);
+      }
+    } else {
+      // Free plan defaults to encouragement on each visit
+      setShowFaithEncouragement(true);
+    }
   }, [plan]);
 
   useEffect(() => {
@@ -137,7 +159,15 @@ const DashboardShell: React.FC = () => {
   const renderView = () => {
     switch(activeView) {
       case 'dashboard':
-        return <DashboardView plan={plan} restrictions={restrictions} onAddToPlanner={handleAddToPlanner} setActiveView={setActiveView} />;
+        return (
+          <DashboardView
+            plan={plan}
+            restrictions={restrictions}
+            onAddToPlanner={handleAddToPlanner}
+            setActiveView={setActiveView}
+            showFaithEncouragement={showFaithEncouragement}
+          />
+        );
       case 'pricing':
         return (
           <PricingPage
@@ -146,7 +176,14 @@ const DashboardShell: React.FC = () => {
           />
         );
       case 'planner':
-        return <PlannerView items={plannerItems} setItems={setPlannerItems} showFaithEncouragement={showFaithEncouragement} />;
+        return (
+          <PlannerView
+            items={plannerItems}
+            setItems={setPlannerItems}
+            showFaithEncouragement={showFaithEncouragement}
+            plan={plan}
+          />
+        );
       case 'profile':
         return (
           <ProfileView

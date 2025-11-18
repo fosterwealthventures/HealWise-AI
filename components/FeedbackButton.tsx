@@ -54,7 +54,7 @@ const FeedbackButton: React.FC = () => {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 bg-brand-green-dark text-white p-4 rounded-full shadow-lg hover:bg-brand-green-dark/90 transition-transform transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-brand-cream dark:focus:ring-offset-brand-charcoal focus:ring-brand-green"
+        className="fixed bottom-20 right-6 z-40 bg-brand-green-dark text-white p-4 rounded-full shadow-lg hover:bg-brand-green-dark/90 transition-transform transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-brand-cream dark:focus:ring-offset-brand-charcoal focus:ring-brand-green"
         aria-label="Open feedback form"
       >
         <ChatBubbleIcon />
